@@ -9,7 +9,91 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      images: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          portfolio_id: string
+          url: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          portfolio_id: string
+          url: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          portfolio_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "images_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolios: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      telegram_users: {
+        Row: {
+          active_portfolio_id: string | null
+          created_at: string
+          first_name: string | null
+          id: number
+          last_name: string | null
+          username: string | null
+        }
+        Insert: {
+          active_portfolio_id?: string | null
+          created_at?: string
+          first_name?: string | null
+          id: number
+          last_name?: string | null
+          username?: string | null
+        }
+        Update: {
+          active_portfolio_id?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: number
+          last_name?: string | null
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telegram_users_active_portfolio_id_fkey"
+            columns: ["active_portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
