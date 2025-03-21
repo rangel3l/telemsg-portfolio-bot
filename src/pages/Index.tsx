@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
-import { getPortfolios, createPortfolio } from '@/services/supabaseService';
+import { Link, useNavigate } from 'react-router-dom';
+import { getPortfolios, createPortfolio, getUserPortfolios } from '@/services/supabaseService';
 import { Portfolio } from '@/types';
 import PortfolioGrid from '@/components/PortfolioGrid';
 import { Button } from '@/components/ui/button';
@@ -7,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import Header from '@/components/Header';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Dialog, 
   DialogContent, 
@@ -16,8 +19,8 @@ import {
   DialogFooter,
   DialogClose
 } from '@/components/ui/dialog';
-import { ExternalLink, Plus, Image as ImageIcon } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ExternalLink, Plus, Image as ImageIcon, LogIn } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 
 const Index = () => {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
@@ -26,21 +29,30 @@ const Index = () => {
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     fetchPortfolios();
-  }, []);
+  }, [user]);
 
   const fetchPortfolios = async () => {
     setLoading(true);
     try {
-      const data = await getPortfolios();
+      let data;
+      if (user) {
+        // Buscar apenas os portfolios do usuário logado
+        data = await getUserPortfolios();
+      } else {
+        // Buscar todos os portfolios públicos
+        data = await getPortfolios();
+      }
       setPortfolios(data);
     } catch (error) {
       console.error("Error fetching portfolios:", error);
       toast({
-        title: "Error",
-        description: "Failed to load portfolios",
+        title: "Erro",
+        description: "Falha ao carregar portfolios",
         variant: "destructive"
       });
     } finally {
@@ -51,10 +63,20 @@ const Index = () => {
   const handleCreatePortfolio = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para criar um portfolio",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+    
     if (!newPortfolioName.trim()) {
       toast({
-        title: "Error",
-        description: "Portfolio name cannot be empty",
+        title: "Erro",
+        description: "O nome do portfolio não pode estar vazio",
         variant: "destructive"
       });
       return;
@@ -67,14 +89,14 @@ const Index = () => {
       setNewPortfolioName('');
       setDialogOpen(false);
       toast({
-        title: "Success",
-        description: `Portfolio "${newPortfolioName}" created successfully`
+        title: "Sucesso",
+        description: `Portfolio "${newPortfolioName}" criado com sucesso`
       });
     } catch (error) {
       console.error("Error creating portfolio:", error);
       toast({
-        title: "Error",
-        description: "Failed to create portfolio",
+        title: "Erro",
+        description: "Falha ao criar portfolio",
         variant: "destructive"
       });
     } finally {
@@ -83,7 +105,68 @@ const Index = () => {
   };
 
   const openCreateDialog = () => {
+    if (!user) {
+      toast({
+        title: "Acesso restrito",
+        description: "Faça login para criar um portfolio",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
     setDialogOpen(true);
+  };
+
+  const renderPortfoliosContent = () => {
+    if (loading || authLoading) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+              <Skeleton className="aspect-[3/2] w-full" />
+              <div className="p-4">
+                <Skeleton className="h-6 w-24 mb-2" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (portfolios.length === 0) {
+      return (
+        <Card className="text-center border-dashed">
+          <CardContent className="pt-12 pb-12 flex flex-col items-center">
+            <div className="rounded-full bg-primary/10 p-4 mb-4">
+              <ImageIcon className="h-10 w-10 text-primary" />
+            </div>
+            <CardTitle className="text-xl mb-2">
+              {user ? "Nenhum portfolio ainda" : "Faça login para gerenciar seus portfolios"}
+            </CardTitle>
+            <CardDescription className="mb-6 max-w-md mx-auto">
+              {user 
+                ? "Crie seu primeiro portfolio para começar a adicionar suas imagens e organizá-las facilmente."
+                : "Crie uma conta ou faça login para começar a criar seus próprios portfolios e organizar suas imagens."
+              }
+            </CardDescription>
+            {user ? (
+              <Button onClick={openCreateDialog} className="flex items-center gap-2">
+                <Plus size={16} />
+                Criar Meu Primeiro Portfolio
+              </Button>
+            ) : (
+              <Button onClick={() => navigate('/auth')} className="flex items-center gap-2">
+                <LogIn size={16} />
+                Entrar ou Cadastrar
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return <PortfolioGrid portfolios={portfolios} />;
   };
 
   return (
@@ -94,7 +177,10 @@ const Index = () => {
           <div>
             <h1 className="text-3xl font-bold">Portfolios</h1>
             <p className="text-muted-foreground mt-1">
-              Navegue por suas coleções de imagens
+              {user 
+                ? "Gerencie suas coleções de imagens"
+                : "Navegue por coleções públicas de imagens"
+              }
             </p>
           </div>
 
@@ -136,37 +222,7 @@ const Index = () => {
           </Dialog>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
-                <Skeleton className="aspect-[3/2] w-full" />
-                <div className="p-4">
-                  <Skeleton className="h-6 w-24 mb-2" />
-                  <Skeleton className="h-4 w-16" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : portfolios.length === 0 ? (
-          <Card className="text-center border-dashed">
-            <CardContent className="pt-12 pb-12 flex flex-col items-center">
-              <div className="rounded-full bg-primary/10 p-4 mb-4">
-                <ImageIcon className="h-10 w-10 text-primary" />
-              </div>
-              <CardTitle className="text-xl mb-2">Nenhum portfolio ainda</CardTitle>
-              <CardDescription className="mb-6 max-w-md mx-auto">
-                Crie seu primeiro portfolio para começar a adicionar suas imagens e organizá-las facilmente.
-              </CardDescription>
-              <Button onClick={openCreateDialog} className="flex items-center gap-2">
-                <Plus size={16} />
-                Criar Meu Primeiro Portfolio
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <PortfolioGrid portfolios={portfolios} />
-        )}
+        {renderPortfoliosContent()}
 
         <div className="mt-16 py-8 border-t border-gray-200 dark:border-gray-800">
           <h2 className="text-xl font-semibold mb-4">Integração com Bot do Telegram</h2>

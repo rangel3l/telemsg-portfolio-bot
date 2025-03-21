@@ -80,9 +80,19 @@ export const getPortfolio = async (id: string): Promise<Portfolio | null> => {
 };
 
 export const createPortfolio = async (name: string): Promise<Portfolio> => {
+  // Obter o usuário atual
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error("User must be authenticated to create a portfolio");
+  }
+
   const { data, error } = await supabase
     .from('portfolios')
-    .insert({ name })
+    .insert({ 
+      name,
+      user_id: user.id 
+    })
     .select()
     .single();
 
@@ -97,6 +107,53 @@ export const createPortfolio = async (name: string): Promise<Portfolio> => {
     createdAt: data.created_at,
     imageCount: 0
   };
+};
+
+export const getUserPortfolios = async (): Promise<Portfolio[]> => {
+  // Obter o usuário atual
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error("User must be authenticated to fetch portfolios");
+  }
+
+  const { data, error } = await supabase
+    .from('portfolios')
+    .select(`
+      id,
+      name,
+      created_at,
+      images:images(count)
+    `)
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error("Error fetching user portfolios:", error);
+    throw error;
+  }
+
+  // Get cover image for each portfolio
+  const portfoliosWithImages = await Promise.all(
+    data.map(async (portfolio) => {
+      const { data: images } = await supabase
+        .from('images')
+        .select('url')
+        .eq('portfolio_id', portfolio.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      return {
+        id: portfolio.id,
+        name: portfolio.name,
+        createdAt: portfolio.created_at,
+        imageCount: portfolio.images.length || 0,
+        coverImage: images && images.length > 0 ? images[0].url : undefined
+      };
+    })
+  );
+
+  return portfoliosWithImages;
 };
 
 // Image functions
@@ -126,6 +183,29 @@ export const addImageToPortfolio = async (
   imageFile: File,
   caption: string
 ): Promise<Image> => {
+  // Verificar se o usuário tem permissão para adicionar ao portfolio
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error("User must be authenticated to add images");
+  }
+  
+  // Verificar se o portfolio pertence ao usuário
+  const { data: portfolio, error: portfolioError } = await supabase
+    .from('portfolios')
+    .select('user_id')
+    .eq('id', portfolioId)
+    .single();
+  
+  if (portfolioError) {
+    console.error("Error checking portfolio:", portfolioError);
+    throw portfolioError;
+  }
+  
+  if (portfolio.user_id !== user.id) {
+    throw new Error("You do not have permission to add images to this portfolio");
+  }
+
   // Upload image to storage
   const filename = `${Date.now()}_${imageFile.name.replace(/\s+/g, '_')}`;
   const { data: uploadData, error: uploadError } = await supabase.storage
@@ -168,16 +248,39 @@ export const addImageToPortfolio = async (
 };
 
 export const deleteImage = async (imageId: string): Promise<void> => {
+  // Verificar se o usuário está autenticado
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error("User must be authenticated to delete images");
+  }
+
   // Get the image URL first to delete from storage later
   const { data: imageData, error: fetchError } = await supabase
     .from('images')
-    .select('url')
+    .select('url, portfolio_id')
     .eq('id', imageId)
     .single();
 
   if (fetchError) {
     console.error("Error fetching image:", fetchError);
     throw fetchError;
+  }
+
+  // Verificar se o portfolio pertence ao usuário
+  const { data: portfolio, error: portfolioError } = await supabase
+    .from('portfolios')
+    .select('user_id')
+    .eq('id', imageData.portfolio_id)
+    .single();
+  
+  if (portfolioError) {
+    console.error("Error checking portfolio:", portfolioError);
+    throw portfolioError;
+  }
+  
+  if (portfolio.user_id !== user.id) {
+    throw new Error("You do not have permission to delete images from this portfolio");
   }
 
   // Delete the database record

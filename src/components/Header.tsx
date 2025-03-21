@@ -2,10 +2,37 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { LogOut, User } from 'lucide-react';
+import { Button } from './ui/button';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+  
+  // Obter as iniciais do nome do usuário para o avatar
+  const getUserInitials = () => {
+    if (!user) return 'U';
+    const userMetadata = user.user_metadata;
+    if (userMetadata && userMetadata.name) {
+      const name = userMetadata.name as string;
+      return name.split(' ').map(part => part[0]).join('').toUpperCase().substring(0, 2);
+    }
+    return user.email?.substring(0, 2).toUpperCase() || 'U';
+  };
   
   return (
     <header className="w-full fixed top-0 left-0 right-0 z-50">
@@ -55,6 +82,47 @@ const Header: React.FC = () => {
           </nav>
           
           <div className="flex items-center space-x-4">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-primary text-white">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem 
+                    className="cursor-pointer flex items-center gap-2"
+                    disabled
+                  >
+                    <User size={16} />
+                    <span className="font-medium truncate max-w-[150px]">
+                      {user.user_metadata.name || user.email}
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-destructive flex items-center gap-2"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut size={16} />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/auth')}
+                className="flex items-center gap-2"
+              >
+                <User size={16} />
+                Entrar
+              </Button>
+            )}
+            
             <button className="rounded-full w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 transition-colors">
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 

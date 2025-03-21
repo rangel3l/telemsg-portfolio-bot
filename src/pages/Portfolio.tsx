@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
@@ -10,14 +11,14 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import ImageCard from '@/components/ImageCard';
 import UploadImageForm from '@/components/UploadImageForm';
-import AddImageForm from '@/components/AddImageForm';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger 
 } from '@/components/ui/dialog';
 import { 
   AlertDialog,
@@ -28,24 +29,24 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
   AlertDialogAction,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import Header from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Trash2, Upload } from 'lucide-react';
+import { Plus, Trash2, LogIn, Shield } from 'lucide-react';
 
 const Portfolio = () => {
   const { id } = useParams<{ id: string }>();
   const [portfolio, setPortfolio] = useState<PortfolioType | null>(null);
   const [images, setImages] = useState<Image[]>([]);
   const [loading, setLoading] = useState(true);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [deleteImageId, setDeleteImageId] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isUploadFormVisible, setIsUploadFormVisible] = useState(false);
+  const { user } = useAuth();
 
   const fetchData = async () => {
     if (!id) return;
@@ -59,7 +60,7 @@ const Portfolio = () => {
       
       if (!portfolioData) {
         console.log("Portfolio not found, redirecting to 404");
-        setError("Portfolio not found");
+        setError("Portfolio não encontrado");
         navigate('/not-found');
         return;
       }
@@ -67,15 +68,28 @@ const Portfolio = () => {
       console.log("Portfolio data:", portfolioData);
       setPortfolio(portfolioData);
       
+      // Verificar se o usuário é o proprietário do portfólio
+      if (user) {
+        const { data } = await supabase
+          .from('portfolios')
+          .select('user_id')
+          .eq('id', id)
+          .single();
+        
+        if (data && data.user_id === user.id) {
+          setIsOwner(true);
+        }
+      }
+      
       const imagesData = await getPortfolioImages(id);
       console.log("Images data:", imagesData);
       setImages(imagesData);
     } catch (error) {
       console.error("Error fetching portfolio data:", error);
-      setError("Failed to load portfolio data");
+      setError("Falha ao carregar dados do portfolio");
       toast({
-        title: "Error",
-        description: "Failed to load portfolio data",
+        title: "Erro",
+        description: "Falha ao carregar dados do portfolio",
         variant: "destructive"
       });
     } finally {
@@ -85,9 +99,28 @@ const Portfolio = () => {
 
   useEffect(() => {
     fetchData();
-  }, [id]);
+  }, [id, user]);
 
   const handleAddImage = () => {
+    if (!user) {
+      toast({
+        title: "Acesso restrito",
+        description: "Faça login para adicionar imagens",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+    
+    if (!isOwner) {
+      toast({
+        title: "Acesso restrito",
+        description: "Você não tem permissão para adicionar imagens a este portfolio",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsUploadFormVisible(true);
   };
 
@@ -101,6 +134,15 @@ const Portfolio = () => {
   };
 
   const handleDeleteImage = async (imageId: string) => {
+    if (!user || !isOwner) {
+      toast({
+        title: "Acesso restrito",
+        description: "Você não tem permissão para excluir imagens deste portfolio",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setDeleteImageId(imageId);
     setConfirmDialogOpen(true);
   };
@@ -112,14 +154,14 @@ const Portfolio = () => {
       await deleteImage(deleteImageId);
       setImages(images.filter(img => img.id !== deleteImageId));
       toast({
-        title: "Success",
-        description: "Image deleted successfully",
+        title: "Sucesso",
+        description: "Imagem excluída com sucesso",
       });
     } catch (error) {
       console.error("Error deleting image:", error);
       toast({
-        title: "Error",
-        description: "Failed to delete image",
+        title: "Erro",
+        description: "Falha ao excluir imagem",
         variant: "destructive"
       });
     } finally {
@@ -133,9 +175,9 @@ const Portfolio = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="container mx-auto py-20 px-4 flex flex-col items-center justify-center">
-          <h2 className="text-xl font-medium mb-4">Error Loading Portfolio</h2>
+          <h2 className="text-xl font-medium mb-4">Erro ao Carregar Portfolio</h2>
           <p className="text-muted-foreground mb-6">{error}</p>
-          <Button onClick={() => navigate('/')}>Back to Home</Button>
+          <Button onClick={() => navigate('/')}>Voltar para a Página Inicial</Button>
         </div>
       </div>
     );
@@ -172,32 +214,53 @@ const Portfolio = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <div className="container mx-auto py-20 px-4 flex flex-col items-center justify-center">
-          <h2 className="text-xl font-medium mb-4">Portfolio Not Found</h2>
-          <p className="text-muted-foreground mb-6">The portfolio you're looking for doesn't exist.</p>
-          <Button onClick={() => navigate('/')}>Back to Home</Button>
+          <h2 className="text-xl font-medium mb-4">Portfolio Não Encontrado</h2>
+          <p className="text-muted-foreground mb-6">O portfolio que você está procurando não existe.</p>
+          <Button onClick={() => navigate('/')}>Voltar para a Página Inicial</Button>
         </div>
       </div>
     );
   }
 
+  const renderOwnershipIndicator = () => {
+    if (!user) return null;
+    
+    return isOwner ? (
+      <div className="inline-flex items-center gap-1.5 text-sm bg-primary/10 text-primary rounded-full px-3 py-1">
+        <Shield size={14} />
+        <span>Você é o proprietário</span>
+      </div>
+    ) : (
+      <div className="inline-flex items-center gap-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-muted-foreground rounded-full px-3 py-1">
+        <Shield size={14} />
+        <span>Visualização</span>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <div className="container mx-auto py-8 px-4 mt-20">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <Link to="/" className="hover:text-primary">Portfolios</Link>
               <span>/</span>
               <span className="font-medium text-foreground">{portfolio.name}</span>
             </div>
-            <h1 className="text-3xl font-bold">{portfolio.name}</h1>
+            <div className="flex items-center flex-wrap gap-3">
+              <h1 className="text-3xl font-bold">{portfolio.name}</h1>
+              {renderOwnershipIndicator()}
+            </div>
           </div>
 
-          <Button onClick={handleAddImage} className="flex items-center gap-2">
-            <Plus size={16} />
-            Adicionar Imagem
-          </Button>
+          {(user && isOwner) && (
+            <Button onClick={handleAddImage} className="flex items-center gap-2">
+              <Plus size={16} />
+              Adicionar Imagem
+            </Button>
+          )}
         </div>
 
         {isUploadFormVisible && (
@@ -217,29 +280,43 @@ const Portfolio = () => {
           <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center">
             <h3 className="text-lg font-medium mb-2">Nenhuma imagem ainda</h3>
             <p className="text-muted-foreground mb-4">
-              Adicione sua primeira imagem a este portfolio.
+              {isOwner 
+                ? "Adicione sua primeira imagem a este portfolio."
+                : "Este portfolio ainda não possui imagens."
+              }
             </p>
-            <Button onClick={handleAddImage} className="flex items-center gap-2">
-              <Plus size={16} />
-              Adicionar Imagem
-            </Button>
+            {user ? (
+              isOwner ? (
+                <Button onClick={handleAddImage} className="flex items-center gap-2">
+                  <Plus size={16} />
+                  Adicionar Imagem
+                </Button>
+              ) : null
+            ) : (
+              <Button onClick={() => navigate('/auth')} className="flex items-center gap-2">
+                <LogIn size={16} />
+                Entrar para Adicionar Imagens
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {images.map((image) => (
               <div key={image.id} className="group relative">
                 <ImageCard image={image} />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => handleDeleteImage(image.id)}
-                    className="flex items-center gap-1"
-                  >
-                    <Trash2 size={14} />
-                    Excluir
-                  </Button>
-                </div>
+                {isOwner && (
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => handleDeleteImage(image.id)}
+                      className="flex items-center gap-1"
+                    >
+                      <Trash2 size={14} />
+                      Excluir
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
