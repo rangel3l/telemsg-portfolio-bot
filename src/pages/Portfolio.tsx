@@ -9,6 +9,7 @@ import { Portfolio as PortfolioType, Image } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import ImageCard from '@/components/ImageCard';
+import UploadImageForm from '@/components/UploadImageForm';
 import AddImageForm from '@/components/AddImageForm';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -30,6 +31,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import Header from '@/components/Header';
+import { Card, CardContent } from '@/components/ui/card';
+import { Plus, Trash2, Upload } from 'lucide-react';
 
 const Portfolio = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,6 +45,7 @@ const Portfolio = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isUploadFormVisible, setIsUploadFormVisible] = useState(false);
 
   const fetchData = async () => {
     if (!id) return;
@@ -83,9 +87,17 @@ const Portfolio = () => {
     fetchData();
   }, [id]);
 
-  const handleRefresh = () => {
+  const handleAddImage = () => {
+    setIsUploadFormVisible(true);
+  };
+
+  const handleImageAdded = () => {
+    setIsUploadFormVisible(false);
     fetchData();
-    setAddDialogOpen(false);
+  };
+
+  const handleCancelUpload = () => {
+    setIsUploadFormVisible(false);
   };
 
   const handleDeleteImage = async (imageId: string) => {
@@ -182,26 +194,35 @@ const Portfolio = () => {
             <h1 className="text-3xl font-bold">{portfolio.name}</h1>
           </div>
 
-          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>Add Image</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[550px]">
-              <DialogHeader>
-                <DialogTitle>Add Image to {portfolio.name}</DialogTitle>
-              </DialogHeader>
-              <AddImageForm portfolioId={portfolio.id} onSuccess={handleRefresh} />
-            </DialogContent>
-          </Dialog>
+          <Button onClick={handleAddImage} className="flex items-center gap-2">
+            <Plus size={16} />
+            Adicionar Imagem
+          </Button>
         </div>
 
-        {images.length === 0 ? (
+        {isUploadFormVisible && (
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <h2 className="text-xl font-semibold mb-4">Adicionar Nova Imagem</h2>
+              <UploadImageForm 
+                portfolioId={portfolio.id} 
+                onSuccess={handleImageAdded} 
+                onCancel={handleCancelUpload} 
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {images.length === 0 && !isUploadFormVisible ? (
           <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center">
-            <h3 className="text-lg font-medium mb-2">No images yet</h3>
+            <h3 className="text-lg font-medium mb-2">Nenhuma imagem ainda</h3>
             <p className="text-muted-foreground mb-4">
-              Add your first image to this portfolio.
+              Adicione sua primeira imagem a este portfolio.
             </p>
-            <Button onClick={() => setAddDialogOpen(true)}>Add Image</Button>
+            <Button onClick={handleAddImage} className="flex items-center gap-2">
+              <Plus size={16} />
+              Adicionar Imagem
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -209,17 +230,15 @@ const Portfolio = () => {
               <div key={image.id} className="group relative">
                 <ImageCard image={image} />
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <AlertDialog open={confirmDialogOpen && deleteImageId === image.id} onOpenChange={setConfirmDialogOpen}>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => handleDeleteImage(image.id)}
-                      >
-                        Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                  </AlertDialog>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => handleDeleteImage(image.id)}
+                    className="flex items-center gap-1"
+                  >
+                    <Trash2 size={14} />
+                    Excluir
+                  </Button>
                 </div>
               </div>
             ))}
@@ -229,14 +248,14 @@ const Portfolio = () => {
         <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the image.
+                Esta ação não pode ser desfeita. A imagem será permanentemente excluída.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete}>Excluir</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

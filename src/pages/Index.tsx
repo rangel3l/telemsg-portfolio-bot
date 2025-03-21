@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getPortfolios, createPortfolio } from '@/services/supabaseService';
 import { Portfolio } from '@/types';
@@ -17,7 +16,8 @@ import {
   DialogFooter,
   DialogClose
 } from '@/components/ui/dialog';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Plus, Image as ImageIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 const Index = () => {
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
@@ -82,6 +82,10 @@ const Index = () => {
     }
   };
 
+  const openCreateDialog = () => {
+    setDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -90,39 +94,41 @@ const Index = () => {
           <div>
             <h1 className="text-3xl font-bold">Portfolios</h1>
             <p className="text-muted-foreground mt-1">
-              Browse through your image collections
+              Navegue por suas coleções de imagens
             </p>
           </div>
 
+          <Button onClick={openCreateDialog} className="flex items-center gap-2">
+            <Plus size={16} />
+            Criar Portfolio
+          </Button>
+
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>Create Portfolio</Button>
-            </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New Portfolio</DialogTitle>
+                <DialogTitle>Criar Novo Portfolio</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreatePortfolio} className="space-y-4">
                 <div className="space-y-2">
                   <label htmlFor="name" className="text-sm font-medium">
-                    Portfolio Name
+                    Nome do Portfolio
                   </label>
                   <Input
                     id="name"
                     value={newPortfolioName}
                     onChange={(e) => setNewPortfolioName(e.target.value)}
-                    placeholder="Enter portfolio name"
+                    placeholder="Digite o nome do portfolio"
                     disabled={creating}
                   />
                 </div>
                 <DialogFooter>
                   <DialogClose asChild>
                     <Button type="button" variant="outline" disabled={creating}>
-                      Cancel
+                      Cancelar
                     </Button>
                   </DialogClose>
                   <Button type="submit" disabled={creating || !newPortfolioName.trim()}>
-                    {creating ? 'Creating...' : 'Create Portfolio'}
+                    {creating ? 'Criando...' : 'Criar Portfolio'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -143,21 +149,29 @@ const Index = () => {
             ))}
           </div>
         ) : portfolios.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-8 text-center">
-            <h3 className="text-lg font-medium mb-2">No portfolios yet</h3>
-            <p className="text-muted-foreground mb-4">
-              Create your first portfolio to get started.
-            </p>
-            <Button onClick={() => setDialogOpen(true)}>Create Portfolio</Button>
-          </div>
+          <Card className="text-center border-dashed">
+            <CardContent className="pt-12 pb-12 flex flex-col items-center">
+              <div className="rounded-full bg-primary/10 p-4 mb-4">
+                <ImageIcon className="h-10 w-10 text-primary" />
+              </div>
+              <CardTitle className="text-xl mb-2">Nenhum portfolio ainda</CardTitle>
+              <CardDescription className="mb-6 max-w-md mx-auto">
+                Crie seu primeiro portfolio para começar a adicionar suas imagens e organizá-las facilmente.
+              </CardDescription>
+              <Button onClick={openCreateDialog} className="flex items-center gap-2">
+                <Plus size={16} />
+                Criar Meu Primeiro Portfolio
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
           <PortfolioGrid portfolios={portfolios} />
         )}
 
         <div className="mt-16 py-8 border-t border-gray-200 dark:border-gray-800">
-          <h2 className="text-xl font-semibold mb-4">Telegram Bot Integration</h2>
+          <h2 className="text-xl font-semibold mb-4">Integração com Bot do Telegram</h2>
           <p className="text-muted-foreground mb-4">
-            Manage your portfolios and add images directly from Telegram! Our bot makes it easy to upload content on the go.
+            Quando disponível, você poderá gerenciar seus portfolios e adicionar imagens diretamente do Telegram! Nosso bot facilita o upload de conteúdo enquanto você está em movimento.
           </p>
           
           <div className="bg-muted rounded-lg p-6 space-y-6">
@@ -238,3 +252,4 @@ const Index = () => {
 };
 
 export default Index;
+
