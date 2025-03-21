@@ -164,7 +164,7 @@ const Index = () => {
             <div>
               <h3 className="text-lg font-medium mb-3">Getting Started</h3>
               <ol className="list-decimal list-inside space-y-3">
-                <li>Add our bot on Telegram: <span className="font-mono bg-background px-2 py-1 rounded">@YourPortfolioBotName</span></li>
+                <li>Add our bot on Telegram: <span className="font-mono bg-background px-2 py-1 rounded">@portifolio_bio</span></li>
                 <li>Start a conversation with the bot by sending <span className="font-mono bg-background px-2 py-1 rounded">/start</span></li>
                 <li>The bot will guide you through the available commands</li>
               </ol>
@@ -209,6 +209,26 @@ const Index = () => {
               <p className="text-sm">
                 All images added through the Telegram bot will immediately appear in your portfolios on this website. Perfect for quickly building your collections on the go!
               </p>
+            </div>
+            
+            <div className="mt-4 border-t pt-4 border-gray-200 dark:border-gray-800">
+              <h3 className="text-lg font-medium mb-3">Telegram App Configuration</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded border border-border p-3">
+                  <p className="font-medium mb-1">App Details</p>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li><span className="font-mono">App title:</span> portifolio_bio</li>
+                    <li><span className="font-mono">Short name:</span> porbio</li>
+                  </ul>
+                </div>
+                <div className="rounded border border-border p-3">
+                  <p className="font-medium mb-1">Production Server</p>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li><span className="font-mono">Server:</span> 149.154.167.50:443</li>
+                    <li><span className="font-mono">DC:</span> 2</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
