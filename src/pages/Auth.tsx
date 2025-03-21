@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,17 +9,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
-import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Info } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
-  // Verifique se o usuário já está autenticado
+  // Verificar se o usuário já está autenticado
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
@@ -39,6 +42,19 @@ const Auth = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Verificar parâmetros na URL ao montar o componente
+  useEffect(() => {
+    // Verificar se existe o parâmetro de confirmation na URL
+    const query = new URLSearchParams(location.search);
+    if (query.get('confirmation') === 'success') {
+      toast({
+        title: "Email confirmado",
+        description: "Seu email foi confirmado com sucesso. Agora você pode fazer login.",
+        variant: "default"
+      });
+    }
+  }, [location, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +114,8 @@ const Auth = () => {
         options: {
           data: {
             name: name
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth?confirmation=success`
         }
       });
       
@@ -106,12 +123,14 @@ const Auth = () => {
         throw error;
       }
       
+      setEmailSent(true);
+      
       toast({
-        title: "Conta criada com sucesso",
-        description: "Você agora está logado no sistema"
+        title: "Cadastro realizado",
+        description: "Enviamos um link de confirmação para o seu email. Por favor, verifique sua caixa de entrada e spam.",
+        variant: "default"
       });
       
-      // Não é necessário navegar aqui, o listener onAuthStateChange vai lidar com isso
     } catch (error: any) {
       console.error("Erro de cadastro:", error);
       toast({
@@ -204,69 +223,79 @@ const Auth = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSignUp} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome</Label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                          <User size={16} />
+                  {emailSent ? (
+                    <Alert className="mb-4 bg-blue-50 border-blue-100">
+                      <Info className="h-4 w-4 text-blue-500" />
+                      <AlertTitle>Verifique seu email</AlertTitle>
+                      <AlertDescription>
+                        Enviamos um link de confirmação para {email}. Por favor, verifique sua caixa de entrada e spam para ativar sua conta.
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <form onSubmit={handleSignUp} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Nome</Label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                            <User size={16} />
+                          </div>
+                          <Input
+                            id="name"
+                            type="text"
+                            placeholder="Seu nome"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="pl-10"
+                            required
+                          />
                         </div>
-                        <Input
-                          id="name"
-                          type="text"
-                          placeholder="Seu nome"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          className="pl-10"
-                          required
-                        />
                       </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email">E-mail</Label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                          <Mail size={16} />
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-email">E-mail</Label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                            <Mail size={16} />
+                          </div>
+                          <Input
+                            id="signup-email"
+                            type="email"
+                            placeholder="seu@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="pl-10"
+                            required
+                          />
                         </div>
-                        <Input
-                          id="signup-email"
-                          type="email"
-                          placeholder="seu@email.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="pl-10"
-                          required
-                        />
                       </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password">Senha</Label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                          <Lock size={16} />
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password">Senha</Label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                            <Lock size={16} />
+                          </div>
+                          <Input
+                            id="signup-password"
+                            type="password"
+                            placeholder="•••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="pl-10"
+                            required
+                          />
                         </div>
-                        <Input
-                          id="signup-password"
-                          type="password"
-                          placeholder="•••••••"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="pl-10"
-                          required
-                        />
                       </div>
-                    </div>
-                    
-                    <Button 
-                      type="submit" 
-                      className="w-full"
-                      disabled={loading}
-                    >
-                      {loading ? 'Criando conta...' : 'Criar conta'}
-                    </Button>
-                  </form>
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={loading}
+                      >
+                        {loading ? 'Criando conta...' : 'Criar conta'}
+                      </Button>
+                    </form>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
