@@ -1,42 +1,11 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+
+/* We've moved the main styling to index.css with our biology-themed colors */
+/* This file is kept minimal as we're using Tailwind and our custom theme */
+
+.bio-card {
+  @apply bg-bio-100 dark:bg-bio-900 border border-bio-200 dark:border-bio-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-300;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.bio-card-hover {
+  @apply hover:border-bio-400 dark:hover:border-bio-600 hover:shadow-bio-200/50 dark:hover:shadow-bio-700/30;
 }

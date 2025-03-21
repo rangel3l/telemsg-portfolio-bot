@@ -5,83 +5,83 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 142 52% 96%; /* Light mint green background */
+    --foreground: 140 30% 20%; /* Dark green text for contrast */
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 140 30% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 140 30% 20%;
 
-    --primary: 220 90% 56%;
+    --primary: 142 76% 36%; /* Medium green as primary */
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 138 25% 92%; /* Light green secondary */
+    --secondary-foreground: 142 50% 25%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 138 25% 92%;
+    --muted-foreground: 142 12% 40%;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 142 30% 90%;
+    --accent-foreground: 142 50% 25%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
+    --border: 142 20% 85%;
+    --input: 142 20% 85%;
+    --ring: 142 76% 36%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-background: 142 30% 96%;
+    --sidebar-foreground: 140 25% 25%;
+    --sidebar-primary: 142 76% 36%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 142 30% 90%;
+    --sidebar-accent-foreground: 142 50% 25%;
+    --sidebar-border: 142 20% 85%;
+    --sidebar-ring: 142 76% 36%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 144 48% 10%; /* Dark forest green background */
+    --foreground: 150 60% 90%; /* Light mint text for contrast */
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 145 50% 12%;
+    --card-foreground: 150 60% 90%;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 145 50% 12%;
+    --popover-foreground: 150 60% 90%;
 
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 240 5.9% 10%;
+    --primary: 142 70% 45%; /* Vibrant green that stands out in dark mode */
+    --primary-foreground: 144 50% 10%;
 
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 145 40% 20%;
+    --secondary-foreground: 150 65% 88%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 145 40% 20%;
+    --muted-foreground: 150 20% 70%;
 
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 142 35% 25%;
+    --accent-foreground: 150 65% 88%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 145 30% 25%;
+    --input: 145 30% 25%;
+    --ring: 142 70% 45%;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 145 48% 15%;
+    --sidebar-foreground: 150 60% 85%;
+    --sidebar-primary: 142 70% 45%;
+    --sidebar-primary-foreground: 144 50% 10%;
+    --sidebar-accent: 142 35% 25%;
+    --sidebar-accent-foreground: 150 65% 88%;
+    --sidebar-border: 145 30% 25%;
+    --sidebar-ring: 142 70% 45%;
   }
 }
 
@@ -159,4 +159,13 @@
   );
   background-size: 1000px 100%;
   animation: shimmer 2s infinite linear;
+}
+
+/* Biology-themed styles */
+.bio-gradient {
+  @apply bg-gradient-to-r from-bio-500/20 to-bio-700/20 dark:from-bio-700/30 dark:to-bio-900/30;
+}
+
+.leaf-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0C13.4 0 0 13.4 0 30c0 16.6 13.4 30 30 30 16.6 0 30-13.4 30-30 0-16.6-13.4-30-30-30zm0 48c-9.9 0-18-8.1-18-18 0-9.9 8.1-18 18-18 9.9 0 18 8.1 18 18 0 9.9-8.1 18-18 18z' fill='%2322c55e' fill-opacity='0.05'/%3E%3C/svg%3E");
 }
