@@ -1,14 +1,15 @@
+
 import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Image } from '@/types';
+import { ImageItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from './ui/skeleton';
 
 interface PortfolioCarouselProps {
-  images: Image[];
+  images: ImageItem[];
   className?: string;
   autoplayInterval?: number; // em milissegundos
 }
@@ -33,7 +34,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
     const newAspectRatios = [...aspectRatios];
     
     images.forEach((image, index) => {
-      const img = new Image();
+      const img = new globalThis.Image();
       img.onload = () => {
         newAspectRatios[index] = getAspectRatio(img.width, img.height);
         setAspectRatios([...newAspectRatios]);

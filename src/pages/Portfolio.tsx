@@ -6,7 +6,7 @@ import {
   getPortfolioImages, 
   deleteImage 
 } from '@/services/supabaseService';
-import { Portfolio as PortfolioType, Image } from '@/types';
+import { Portfolio as PortfolioType, ImageItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import ImageCard from '@/components/ImageCard';
@@ -39,7 +39,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 const Portfolio = () => {
   const { id } = useParams<{ id: string }>();
   const [portfolio, setPortfolio] = useState<PortfolioType | null>(null);
-  const [images, setImages] = useState<Image[]>([]);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [deleteImageId, setDeleteImageId] = useState<string | null>(null);
