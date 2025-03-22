@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Portfolio, Image } from "@/types";
+import { Portfolio, ImageItem } from "@/types";
 
 // Portfolio functions
 export const getPortfolios = async (): Promise<Portfolio[]> => {
@@ -182,7 +182,7 @@ export const addImageToPortfolio = async (
   portfolioId: string,
   imageFile: File,
   caption: string
-): Promise<Image> => {
+): Promise<ImageItem> => {
   // Verificar se o usuário tem permissão para adicionar ao portfolio
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -206,8 +206,16 @@ export const addImageToPortfolio = async (
     throw new Error("You do not have permission to add images to this portfolio");
   }
 
+  // Sanitize filename to remove special characters and spaces
+  const timestamp = Date.now();
+  const sanitizedName = imageFile.name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics (accents)
+    .replace(/[^a-zA-Z0-9.]/g, '_'); // Replace non-alphanumeric with underscore
+  
+  const filename = `${timestamp}_${sanitizedName}`;
+
   // Upload image to storage
-  const filename = `${Date.now()}_${imageFile.name.replace(/\s+/g, '_')}`;
   const { data: uploadData, error: uploadError } = await supabase.storage
     .from('portfolio_images')
     .upload(filename, imageFile);
