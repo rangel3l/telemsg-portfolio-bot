@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -14,6 +13,10 @@ interface PortfolioCarouselProps {
   autoplayInterval?: number; // em milissegundos
 }
 
+const getAspectRatio = (width: number, height: number): number => {
+  return width / height;
+};
+
 const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
   images,
   className,
@@ -21,7 +24,29 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState<boolean[]>(Array(images.length).fill(true));
+  const [aspectRatios, setAspectRatios] = useState<number[]>(Array(images.length).fill(1));
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (!images || images.length === 0) return;
+    
+    const newAspectRatios = [...aspectRatios];
+    
+    images.forEach((image, index) => {
+      const img = new Image();
+      img.onload = () => {
+        newAspectRatios[index] = getAspectRatio(img.width, img.height);
+        setAspectRatios([...newAspectRatios]);
+        
+        setIsLoading(prev => {
+          const newState = [...prev];
+          newState[index] = false;
+          return newState;
+        });
+      };
+      img.src = image.url;
+    });
+  }, [images]);
 
   const handleImageLoad = (index: number) => {
     setIsLoading(prev => {
@@ -51,7 +76,6 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
     );
   }, [images.length]);
 
-  // Configurar autoplay
   useEffect(() => {
     if (autoplayInterval <= 0 || images.length <= 1) return;
     
@@ -60,7 +84,6 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
     return () => clearInterval(intervalId);
   }, [nextSlide, autoplayInterval, images.length]);
 
-  // Manipular pressionamento de teclas para navegação
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
@@ -87,11 +110,9 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
   }
 
   return (
-    <div className={cn("relative w-full rounded-xl overflow-hidden group", className)}>
-      {/* Carousel Container */}
-      <AspectRatio ratio={isMobile ? 9/16 : 16/9}>
+    <div className={cn("relative w-full rounded-xl overflow-hidden group max-w-3xl mx-auto", className)}>
+      <AspectRatio ratio={aspectRatios[currentIndex]} className="max-h-[80vh]">
         <div className="relative w-full h-full">
-          {/* Slides */}
           {images.map((image, index) => (
             <div
               key={image.id}
@@ -100,26 +121,22 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
                 index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
               )}
             >
-              {/* Skeleton loader */}
               {isLoading[index] && (
                 <div className="absolute inset-0 z-10">
                   <Skeleton className="w-full h-full" />
                 </div>
               )}
               
-              {/* Image */}
               <img
                 src={image.url}
                 alt={image.caption || 'Imagem do portfólio'}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onLoad={() => handleImageLoad(index)}
                 onError={() => handleImageError(index)}
               />
               
-              {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-20" />
               
-              {/* Caption content */}
               <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 z-30 text-white">
                 <h3 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">{image.caption}</h3>
                 <p className="text-sm md:text-base opacity-90 line-clamp-2">
@@ -135,7 +152,6 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
         </div>
       </AspectRatio>
 
-      {/* Navigation buttons */}
       <Button
         variant="ghost"
         size="icon"
@@ -156,7 +172,6 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
         <ChevronRight className="h-5 w-5" />
       </Button>
       
-      {/* Indicators */}
       <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-1.5 pb-1 z-30">
         {images.map((_, index) => (
           <button

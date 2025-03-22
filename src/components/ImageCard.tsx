@@ -12,23 +12,8 @@ interface ImageCardProps {
 
 // Function to determine aspect ratio from image dimensions
 const getAspectRatio = (width: number, height: number): number => {
-  // Instagram supported ratios
-  // 1:1 (square)
-  // 4:5 (portrait)
-  // 1.91:1 (landscape)
-  
-  const ratio = width / height;
-  
-  if (ratio >= 0.8 && ratio <= 1.2) {
-    // Square (1:1)
-    return 1/1;
-  } else if (ratio < 0.8) {
-    // Portrait (4:5)
-    return 4/5;
-  } else {
-    // Landscape (1.91:1)
-    return 1.91/1;
-  }
+  // Use the actual image aspect ratio instead of forcing Instagram ratios
+  return width / height;
 };
 
 const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
@@ -60,11 +45,12 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
     <div 
       className={cn(
         "image-card rounded-xl overflow-hidden bio-card bio-card-hover transition-all duration-300",
+        "max-w-md mx-auto", // Adicionado para limitar largura máxima
         className
       )}
     >
       <div className="relative w-full overflow-hidden">
-        <AspectRatio ratio={aspectRatio}>
+        <AspectRatio ratio={aspectRatio} className="max-h-[80vh]">
           {!isLoaded && !isError && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Skeleton className="h-full w-full" />
@@ -97,7 +83,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
             src={image.url} 
             alt={image.caption} 
             className={cn(
-              "w-full h-full object-cover transition-opacity duration-500",
+              "w-full h-full object-contain", // Alterado para object-contain para não cortar a imagem
               isLoaded && !isError ? "opacity-100" : "opacity-0"
             )}
             onLoad={() => setIsLoaded(true)}
