@@ -29,7 +29,7 @@ const PortfolioGrid: React.FC<PortfolioGridProps> = ({ portfolios, className }) 
           className="bio-card bio-card-hover image-card rounded-xl overflow-hidden cursor-pointer"
           onClick={() => navigate(`/portfolio/${portfolio.id}`)}
         >
-          <AspectRatio ratio={3/2}>
+          <AspectRatio ratio={isMobile ? 1 : 16/9}>
             <div className="relative w-full h-full">
               {portfolio.coverImage ? (
                 <img 

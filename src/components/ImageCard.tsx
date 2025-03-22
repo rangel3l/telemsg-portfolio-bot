@@ -10,9 +10,33 @@ interface ImageCardProps {
   className?: string;
 }
 
+// Function to determine aspect ratio from image dimensions
+const getAspectRatio = (width: number, height: number): number => {
+  // Instagram supported ratios
+  // 1:1 (square)
+  // 4:5 (portrait)
+  // 1.91:1 (landscape)
+  
+  const ratio = width / height;
+  
+  if (ratio >= 0.8 && ratio <= 1.2) {
+    // Square (1:1)
+    return 1/1;
+  } else if (ratio < 0.8) {
+    // Portrait (4:5)
+    return 4/5;
+  } else {
+    // Landscape (1.91:1)
+    return 1.91/1;
+  }
+};
+
 const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [imgWidth, setImgWidth] = useState(0);
+  const [imgHeight, setImgHeight] = useState(0);
+  const [aspectRatio, setAspectRatio] = useState(4/3); // Default ratio
   
   // Format date - e.g., "15 Jun 2023"
   const formattedDate = new Date(image.createdAt).toLocaleDateString('pt-BR', {
@@ -20,6 +44,17 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
     month: 'short',
     year: 'numeric',
   });
+  
+  // Load image dimensions
+  React.useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      setImgWidth(img.width);
+      setImgHeight(img.height);
+      setAspectRatio(getAspectRatio(img.width, img.height));
+    };
+    img.src = image.url;
+  }, [image.url]);
   
   return (
     <div 
@@ -29,7 +64,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
       )}
     >
       <div className="relative w-full overflow-hidden">
-        <AspectRatio ratio={4/3}>
+        <AspectRatio ratio={aspectRatio}>
           {!isLoaded && !isError && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Skeleton className="h-full w-full" />
@@ -72,16 +107,17 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
             }}
           />
           
-          {/* Gradient overlay para textos mais legíveis */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          {/* Gradient overlay for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-100 transition-opacity"></div>
+          
+          {/* Caption overlay */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+            <p className="text-white/80 text-xs mb-1">{formattedDate}</p>
+            <p className="text-white text-sm font-medium">
+              {image.caption}
+            </p>
+          </div>
         </AspectRatio>
-      </div>
-      
-      <div className="p-4">
-        <p className="text-gray-500 dark:text-gray-400 text-xs mb-2">{formattedDate}</p>
-        <p className="text-gray-800 dark:text-gray-200 text-sm font-medium mb-1">
-          {image.caption}
-        </p>
       </div>
     </div>
   );
