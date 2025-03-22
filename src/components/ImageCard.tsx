@@ -36,7 +36,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
   const [isError, setIsError] = useState(false);
   const [imgWidth, setImgWidth] = useState(0);
   const [imgHeight, setImgHeight] = useState(0);
-  const [aspectRatio, setAspectRatio] = useState(4/3); // Default ratio
+  const [aspectRatio, setAspectRatio] = useState(1); // Default to square ratio
   
   // Format date - e.g., "15 Jun 2023"
   const formattedDate = new Date(image.createdAt).toLocaleDateString('pt-BR', {
