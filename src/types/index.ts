@@ -1,4 +1,3 @@
-
 export interface Portfolio {
   id: string;
   name: string;
@@ -7,13 +6,15 @@ export interface Portfolio {
   coverImage?: string;
 }
 
-export interface Image {
+export interface ImageItem {
   id: string;
   portfolioId: string;
   url: string;
   caption: string;
   createdAt: string;
 }
+
+export type Image = ImageItem;
 
 export interface TelegramUser {
   id: number;

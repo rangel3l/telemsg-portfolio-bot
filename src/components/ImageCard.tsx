@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-import { Image } from '@/types';
+import { ImageItem } from '@/types';
 import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 import { AspectRatio } from './ui/aspect-ratio';
 
 interface ImageCardProps {
-  image: Image;
+  image: ImageItem;
   className?: string;
 }
 
@@ -47,7 +47,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
   
   // Load image dimensions
   React.useEffect(() => {
-    const img = new Image();
+    const img = new globalThis.Image();
     img.onload = () => {
       setImgWidth(img.width);
       setImgHeight(img.height);
