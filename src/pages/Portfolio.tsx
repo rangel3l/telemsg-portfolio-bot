@@ -32,7 +32,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import Header from '@/components/Header';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Trash2, LogIn, Shield } from 'lucide-react';
+import { Plus, Trash2, LogIn, Shield, Grid, Film } from 'lucide-react';
+import PortfolioCarousel from '@/components/PortfolioCarousel';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Portfolio = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,10 +45,19 @@ const Portfolio = () => {
   const [deleteImageId, setDeleteImageId] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'carousel'>('carousel');
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isUploadFormVisible, setIsUploadFormVisible] = useState(false);
   const { user } = useAuth();
+  const isMobile = useIsMobile();
+
+  // Se está no mobile, começa com o carousel por padrão
+  useEffect(() => {
+    if (isMobile) {
+      setViewMode('carousel');
+    }
+  }, [isMobile]);
 
   const fetchData = async () => {
     if (!id) return;
@@ -193,8 +204,12 @@ const Portfolio = () => {
             <Skeleton className="h-10 w-24" />
           </div>
           
+          <div className="w-full h-[40vh] md:h-[60vh] rounded-xl overflow-hidden mb-8">
+            <Skeleton className="w-full h-full" />
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+            {[1, 2, 3].map((i) => (
               <div key={i} className="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
                 <Skeleton className="aspect-[4/3] w-full" />
                 <div className="p-4 space-y-2">
@@ -255,12 +270,38 @@ const Portfolio = () => {
             </div>
           </div>
 
-          {(user && isOwner) && (
-            <Button onClick={handleAddImage} className="flex items-center gap-2">
-              <Plus size={16} />
-              Adicionar Imagem
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {images.length > 0 && (
+              <div className="flex border rounded-lg overflow-hidden mr-2">
+                <Button 
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'} 
+                  size="sm" 
+                  className="rounded-none px-3"
+                  onClick={() => setViewMode('grid')}
+                >
+                  <Grid size={16} className="mr-1" />
+                  <span className="hidden sm:inline">Grade</span>
+                </Button>
+                <Button 
+                  variant={viewMode === 'carousel' ? 'default' : 'ghost'} 
+                  size="sm" 
+                  className="rounded-none px-3"
+                  onClick={() => setViewMode('carousel')}
+                >
+                  <Film size={16} className="mr-1" />
+                  <span className="hidden sm:inline">Carrossel</span>
+                </Button>
+              </div>
+            )}
+
+            {(user && isOwner) && (
+              <Button onClick={handleAddImage} className="flex items-center gap-2">
+                <Plus size={16} />
+                <span className="hidden sm:inline">Adicionar Imagem</span>
+                <span className="sm:hidden">Adicionar</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         {isUploadFormVisible && (
@@ -300,26 +341,38 @@ const Portfolio = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {images.map((image) => (
-              <div key={image.id} className="group relative">
-                <ImageCard image={image} />
-                {isOwner && (
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => handleDeleteImage(image.id)}
-                      className="flex items-center gap-1"
-                    >
-                      <Trash2 size={14} />
-                      Excluir
-                    </Button>
-                  </div>
-                )}
+          <>
+            {/* Exibir carrossel quando em modo carrossel ou dispositivo móvel */}
+            {viewMode === 'carousel' && images.length > 0 && (
+              <div className="mb-8">
+                <PortfolioCarousel images={images} />
               </div>
-            ))}
-          </div>
+            )}
+            
+            {/* Exibir grade quando em modo grade */}
+            {viewMode === 'grid' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {images.map((image) => (
+                  <div key={image.id} className="group relative">
+                    <ImageCard image={image} />
+                    {isOwner && (
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => handleDeleteImage(image.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <Trash2 size={14} />
+                          Excluir
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
