@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ImageItem } from '@/types';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Skeleton } from './ui/skeleton';
+import { Progress } from './ui/progress';
 
 interface PortfolioCarouselProps {
   images: ImageItem[];
@@ -26,7 +27,9 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState<boolean[]>(Array(images.length).fill(true));
   const [aspectRatios, setAspectRatios] = useState<number[]>(Array(images.length).fill(1));
+  const [progress, setProgress] = useState(0);
   const isMobile = useIsMobile();
+  const progressInterval = useRef<number | null>(null);
 
   useEffect(() => {
     if (!images || images.length === 0) return;
@@ -73,21 +76,52 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
     setCurrentIndex(prevIndex => 
       prevIndex === images.length - 1 ? 0 : prevIndex + 1
     );
+    setProgress(0);
   }, [images.length]);
 
   const prevSlide = useCallback(() => {
     setCurrentIndex(prevIndex => 
       prevIndex === 0 ? images.length - 1 : prevIndex - 1
     );
+    setProgress(0);
   }, [images.length]);
 
   useEffect(() => {
     if (autoplayInterval <= 0 || images.length <= 1) return;
     
-    const intervalId = setInterval(nextSlide, autoplayInterval);
+    // Reset progress bar animation on image change
+    setProgress(0);
     
-    return () => clearInterval(intervalId);
-  }, [nextSlide, autoplayInterval, images.length]);
+    // Clear any existing intervals
+    if (progressInterval.current) {
+      window.clearInterval(progressInterval.current);
+    }
+    
+    const startTime = Date.now();
+    const updateProgressBar = () => {
+      const elapsedTime = Date.now() - startTime;
+      const progressValue = Math.min((elapsedTime / autoplayInterval) * 100, 100);
+      setProgress(progressValue);
+      
+      if (progressValue >= 100) {
+        if (progressInterval.current) {
+          window.clearInterval(progressInterval.current);
+        }
+      }
+    };
+    
+    // Update progress more frequently for smooth animation
+    progressInterval.current = window.setInterval(updateProgressBar, 16) as unknown as number;
+    
+    const intervalId = window.setTimeout(nextSlide, autoplayInterval);
+    
+    return () => {
+      window.clearTimeout(intervalId);
+      if (progressInterval.current) {
+        window.clearInterval(progressInterval.current);
+      }
+    };
+  }, [currentIndex, nextSlide, autoplayInterval, images.length]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -116,6 +150,11 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
 
   return (
     <div className={cn("relative w-full rounded-xl overflow-hidden group max-w-3xl mx-auto", className)}>
+      {/* Progress bar at the top */}
+      <div className="absolute top-0 left-0 right-0 z-40 px-0">
+        <Progress value={progress} className="h-1 rounded-none bg-gray-200/20" indicatorClassName="bg-white" />
+      </div>
+      
       <AspectRatio ratio={aspectRatios[currentIndex]} className="w-full h-auto max-h-[70vh]">
         <div className="relative w-full h-full">
           {images.map((image, index) => {
