@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Portfolio, ImageItem } from "@/types";
 
@@ -6,7 +7,7 @@ interface DatabaseImage {
   portfolio_id: string;
   url: string;
   caption: string;
-  image_name: string;
+  image_name?: string; // Adicionado o campo como opcional
   created_at: string;
 }
 
@@ -248,7 +249,7 @@ export const addImageToPortfolio = async (
         portfolio_id: portfolioId,
         url: publicUrl,
         caption: caption,
-        image_name: imageName,
+        image_name: imageName, // Certifique-se de que esta propriedade esteja presente
       }
     ])
     .select()
@@ -264,7 +265,7 @@ export const addImageToPortfolio = async (
     portfolioId: data.portfolio_id,
     url: data.url,
     caption: data.caption || '',
-    imageName: data.image_name || '',
+    imageName: data.image_name || '', // Use o operador || para fornecer um valor padrão caso seja null
     createdAt: data.created_at
   };
 };
