@@ -51,7 +51,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
     images.forEach((image, index) => {
       loadImage(image, index);
     });
-  }, [images]); // Remove aspectRatios from dependencies as it's handled within the effect
+  }, [images]);
 
   const handleImageLoad = (index: number) => {
     setIsLoading(prev => {
@@ -116,7 +116,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
 
   return (
     <div className={cn("relative w-full rounded-xl overflow-hidden group max-w-3xl mx-auto", className)}>
-      <AspectRatio ratio={aspectRatios[currentIndex]} className="max-h-[80vh]">
+      <AspectRatio ratio={aspectRatios[currentIndex]} className="w-full h-auto max-h-[70vh]">
         <div className="relative w-full h-full">
           {images.map((image, index) => {
             // Determine o título a ser exibido
@@ -173,7 +173,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
       <Button
         variant="ghost"
         size="icon"
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-full h-8 w-8 md:h-10 md:w-10 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-full h-8 w-8 md:h-10 md:w-10 opacity-70 group-hover:opacity-100 transition-opacity"
         onClick={prevSlide}
         aria-label="Previous slide"
       >
@@ -183,7 +183,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
       <Button
         variant="ghost"
         size="icon"
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-full h-8 w-8 md:h-10 md:w-10 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-full h-8 w-8 md:h-10 md:w-10 opacity-70 group-hover:opacity-100 transition-opacity"
         onClick={nextSlide}
         aria-label="Next slide"
       >
