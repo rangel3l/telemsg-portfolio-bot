@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -212,21 +211,21 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
       <Button
         variant="ghost"
         size="icon"
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-full h-8 w-8 md:h-10 md:w-10 opacity-70 group-hover:opacity-100 transition-opacity"
+        className="absolute left-4 top-[20%] -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-full h-14 w-14 md:h-16 md:w-16 opacity-70 hover:opacity-100 transition-opacity"
         onClick={prevSlide}
         aria-label="Previous slide"
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-8 w-8 md:h-10 md:w-10" />
       </Button>
       
       <Button
         variant="ghost"
         size="icon"
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-full h-8 w-8 md:h-10 md:w-10 opacity-70 group-hover:opacity-100 transition-opacity"
+        className="absolute right-4 top-[20%] -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-full h-14 w-14 md:h-16 md:w-16 opacity-70 hover:opacity-100 transition-opacity"
         onClick={nextSlide}
         aria-label="Next slide"
       >
-        <ChevronRight className="h-5 w-5" />
+        <ChevronRight className="h-8 w-8 md:h-10 md:w-10" />
       </Button>
       
       <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-1.5 pb-1 z-30">

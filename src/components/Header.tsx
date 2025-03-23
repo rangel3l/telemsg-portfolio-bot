@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -67,11 +66,11 @@ const Header: React.FC = () => {
             className="flex items-center cursor-pointer"
             onClick={() => navigate('/')}
           >
-            <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center mr-3">
+            <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mr-3">
               <img 
                 src="/lovable-uploads/b1abe2cd-41f0-43e5-a9e2-ea123b70684b.png" 
                 alt="ImageFolio Logo" 
-                className="w-8 h-8 object-contain"
+                className="w-10 h-10 object-contain"
               />
             </div>
             <h1 className="text-xl font-medium text-gray-900 dark:text-white tracking-tight">
