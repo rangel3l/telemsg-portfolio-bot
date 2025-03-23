@@ -98,10 +98,15 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
           
           {/* Caption overlay */}
           <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-            <p className="text-white/80 text-xs mb-1">{formattedDate}</p>
-            <p className="text-white text-sm font-medium">
-              {image.caption}
-            </p>
+            <div className="bg-black/30 backdrop-blur-sm rounded-lg p-3">
+              <h3 className="text-sm font-bold uppercase mb-1">
+                {image.imageName || image.caption.split('.')[0] || 'Sem título'}
+              </h3>
+              <p className="text-white/80 text-xs mb-1">{formattedDate}</p>
+              <p className="text-white text-sm font-medium">
+                {image.caption}
+              </p>
+            </div>
           </div>
         </AspectRatio>
       </div>
