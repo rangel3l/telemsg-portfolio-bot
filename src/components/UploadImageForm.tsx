@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -150,10 +149,17 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
               {/* Caption preview overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               {(caption || imageName) && (
-                <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                  <p className="text-white text-sm font-medium">
-                    {caption || imageName}
-                  </p>
+                <div className="absolute bottom-0 left-0 right-0 p-3 text-white bg-black/60 backdrop-blur-sm">
+                  {imageName && (
+                    <p className="text-white text-sm font-medium uppercase mb-1">
+                      {imageName}
+                    </p>
+                  )}
+                  {caption && (
+                    <p className="text-white/90 text-sm">
+                      {caption}
+                    </p>
+                  )}
                 </div>
               )}
             </AspectRatio>
@@ -166,13 +172,14 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
       )}
       
       <div className="space-y-2">
-        <Label htmlFor="imageName">Nome da Imagem</Label>
+        <Label htmlFor="imageName">Nome da Imagem (Título)</Label>
         <Input
           id="imageName"
           value={imageName}
           onChange={(e) => setImageName(e.target.value)}
-          placeholder="Digite um nome para esta imagem"
+          placeholder="Digite um título para esta imagem"
           disabled={uploading}
+          className="uppercase"
         />
       </div>
       

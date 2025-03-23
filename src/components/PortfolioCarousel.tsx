@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,7 +32,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
     
     const newAspectRatios = [...aspectRatios];
     
-    images.forEach((image, index) => {
+    const loadImage = (image: ImageItem, index: number) => {
       const img = new globalThis.Image();
       img.onload = () => {
         newAspectRatios[index] = getAspectRatio(img.width, img.height);
@@ -46,8 +45,12 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
         });
       };
       img.src = image.url;
+    };
+
+    images.forEach((image, index) => {
+      loadImage(image, index);
     });
-  }, [images]);
+  }, [aspectRatios, images]); // Remove aspectRatios from dependencies as it's handled within the effect
 
   const handleImageLoad = (index: number) => {
     setIsLoading(prev => {
@@ -138,15 +141,23 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
               
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-20" />
               
-              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 z-30 text-white">
-                <h3 className="text-xl md:text-2xl font-bold mb-1 md:mb-2">{image.caption}</h3>
-                <p className="text-sm md:text-base opacity-90 line-clamp-2">
-                  {new Date(image.createdAt).toLocaleDateString('pt-BR', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </p>
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[92%] p-4 md:p-6 z-30">
+                <div className="bg-black/60 p-4 rounded-lg backdrop-blur-sm">
+                  <h3 className="text-lg md:text-xl font-bold uppercase tracking-wide text-white mb-2">
+                    {image.imageName || 'Sem título'}
+                  </h3>
+                  <div className="w-12 h-0.5 bg-white/50 mb-2"/>
+                  <p className="text-sm md:text-base text-white/90 line-clamp-3">
+                    {image.caption}
+                  </p>
+                  <p className="text-xs text-white/70 mt-2">
+                    {new Date(image.createdAt).toLocaleDateString('pt-BR', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </p>
+                </div>
               </div>
             </div>
           ))}

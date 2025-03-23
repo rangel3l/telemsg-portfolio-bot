@@ -1,0 +1,121 @@
+:root {
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --bg-color-rgb: 255, 255, 255;
+}
+
+[data-theme="dark"] {
+  --bg-color: #1a1a1a;
+  --text-color: #ffffff;
+  --bg-color-rgb: 26, 26, 26;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  background-color: var(--bg-color);
+}
+
+.content {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+  padding: 0 15px;
+}
+
+@media (max-width: 768px) {
+  .content {
+    max-width: 90%;
+  }
+}
+
+.theme-toggle {
+  cursor: pointer;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--text-color);
+  color: var(--bg-color);
+}
+
+.image-navigation-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.navigation-button {
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.image-container {
+  flex: 1;
+  max-width: 800px;
+  position: relative;
+}
+
+.image-text {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92%;
+  padding: 15px;
+  background-color: rgba(var(--bg-color-rgb), 0.9);
+  font-size: 0.9em;
+  line-height: 1.4;
+  margin: 0;
+  box-sizing: border-box;
+  border-radius: 8px 8px 0 0;
+}
+
+.image-title {
+  display: block;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 1.1em;
+}
+
+.image-description {
+  display: block;
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid var(--text-color);
+}
+
+@media (max-width: 768px) {
+  .image-text {
+    font-size: 0.8em;
+    padding: 10px;
+  }
+}

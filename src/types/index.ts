@@ -12,6 +12,7 @@ export interface ImageItem {
   url: string;
   caption: string;
   createdAt: string;
+  imageName?: string;
 }
 
 export type Image = ImageItem;

@@ -1,6 +1,14 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Portfolio, ImageItem } from "@/types";
+
+interface DatabaseImage {
+  id: string;
+  portfolio_id: string;
+  url: string;
+  caption: string;
+  image_name: string;
+  created_at: string;
+}
 
 // Portfolio functions
 export const getPortfolios = async (): Promise<Portfolio[]> => {
@@ -157,7 +165,7 @@ export const getUserPortfolios = async (): Promise<Portfolio[]> => {
 };
 
 // Image functions
-export const getPortfolioImages = async (portfolioId: string): Promise<Image[]> => {
+export const getPortfolioImages = async (portfolioId: string): Promise<ImageItem[]> => {
   const { data, error } = await supabase
     .from('images')
     .select('*')
@@ -169,19 +177,21 @@ export const getPortfolioImages = async (portfolioId: string): Promise<Image[]> 
     throw error;
   }
 
-  return data.map(image => ({
+  return (data as DatabaseImage[]).map(image => ({
     id: image.id,
     portfolioId: image.portfolio_id,
     url: image.url,
     caption: image.caption || '',
+    imageName: image.image_name || '',
     createdAt: image.created_at
   }));
 };
 
 export const addImageToPortfolio = async (
-  portfolioId: string,
-  imageFile: File,
-  caption: string
+  portfolioId: string, 
+  file: File, 
+  caption: string,
+  imageName?: string
 ): Promise<ImageItem> => {
   // Verificar se o usuário tem permissão para adicionar ao portfolio
   const { data: { user } } = await supabase.auth.getUser();
@@ -208,7 +218,7 @@ export const addImageToPortfolio = async (
 
   // Sanitize filename to remove special characters and spaces
   const timestamp = Date.now();
-  const sanitizedName = imageFile.name
+  const sanitizedName = file.name
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // Remove diacritics (accents)
     .replace(/[^a-zA-Z0-9.]/g, '_'); // Replace non-alphanumeric with underscore
@@ -218,7 +228,7 @@ export const addImageToPortfolio = async (
   // Upload image to storage
   const { data: uploadData, error: uploadError } = await supabase.storage
     .from('portfolio_images')
-    .upload(filename, imageFile);
+    .upload(filename, file);
 
   if (uploadError) {
     console.error("Error uploading image:", uploadError);
@@ -233,11 +243,14 @@ export const addImageToPortfolio = async (
   // Save image reference in database
   const { data, error } = await supabase
     .from('images')
-    .insert({
-      portfolio_id: portfolioId,
-      url: publicUrl,
-      caption
-    })
+    .insert([
+      {
+        portfolio_id: portfolioId,
+        url: publicUrl,
+        caption: caption,
+        image_name: imageName,
+      }
+    ])
     .select()
     .single();
 
@@ -251,6 +264,7 @@ export const addImageToPortfolio = async (
     portfolioId: data.portfolio_id,
     url: data.url,
     caption: data.caption || '',
+    imageName: data.image_name || '',
     createdAt: data.created_at
   };
 };
