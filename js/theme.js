@@ -1,20 +1,8 @@
-function toggleTheme() {
-    const body = document.querySelector('body');
-    const currentTheme = body.getAttribute('data-theme');
-    
-    if (currentTheme === 'dark') {
-        body.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'light');
-    } else {
-        body.setAttribute('data-theme', 'dark');
-        localStorage.setItem('theme', 'dark');
-    }
-}
 
-// Aplicar tema salvo ao carregar a página
-document.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        document.querySelector('body').setAttribute('data-theme', 'dark');
-    }
-});
+// Este script não é mais necessário pois a funcionalidade de tema
+// foi implementada diretamente nos componentes React usando
+// o localStorage e classes Tailwind.
+
+// A implementação do tema está agora nos arquivos:
+// 1. src/main.tsx - verifica e aplica o tema ao carregar a página
+// 2. src/components/Header.tsx - botão de toggle do tema

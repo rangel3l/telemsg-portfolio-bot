@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Moon, Sun } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import {
@@ -17,10 +17,35 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  
+  useEffect(() => {
+    // Verificar tema salvo ao carregar a página
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      setTheme('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      setTheme('light');
+    }
+  }, []);
   
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
+  };
+  
+  const toggleTheme = () => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+      setTheme('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+      setTheme('light');
+    }
   };
   
   // Obter as iniciais do nome do usuário para o avatar
@@ -43,20 +68,11 @@ const Header: React.FC = () => {
             onClick={() => navigate('/')}
           >
             <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center mr-3">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24"
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className="w-6 h-6 text-white"
-              >
-                <rect width="18" height="18" x="3" y="3" rx="2" />
-                <circle cx="9" cy="9" r="2" />
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-              </svg>
+              <img 
+                src="/lovable-uploads/b1abe2cd-41f0-43e5-a9e2-ea123b70684b.png" 
+                alt="ImageFolio Logo" 
+                className="w-8 h-8 object-contain"
+              />
             </div>
             <h1 className="text-xl font-medium text-gray-900 dark:text-white tracking-tight">
               ImageFolio
@@ -64,20 +80,17 @@ const Header: React.FC = () => {
           </div>
           
           <nav className="hidden md:flex items-center space-x-6">
-            <NavLink 
-              href="/" 
-              active={location.pathname === '/'} 
-              label="Portfolios" 
-            />
+            {user && (
+              <NavLink 
+                href="/" 
+                active={location.pathname === '/'} 
+                label="Portfolios" 
+              />
+            )}
             <NavLink 
               href="#how-it-works" 
               active={location.hash === '#how-it-works'} 
               label="Como Funciona" 
-            />
-            <NavLink 
-              href="#telegram-bot" 
-              active={location.hash === '#telegram-bot'} 
-              label="Bot Telegram" 
             />
           </nav>
           
@@ -123,20 +136,18 @@ const Header: React.FC = () => {
               </Button>
             )}
             
-            <button className="rounded-full w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 transition-colors">
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24"
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className="w-5 h-5"
-              >
-                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-              </svg>
-            </button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full w-10 h-10 flex items-center justify-center bg-secondary hover:bg-secondary/80 transition-colors"
+              onClick={toggleTheme}
+            >
+              {theme === 'light' ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Sun className="h-5 w-5" />
+              )}
+            </Button>
           </div>
         </div>
       </div>
