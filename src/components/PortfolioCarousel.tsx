@@ -29,6 +29,8 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
   const [progress, setProgress] = useState(0);
   const isMobile = useIsMobile();
   const progressInterval = useRef<number | null>(null);
+  const [isOverlayVisible, setIsOverlayVisible] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (!images || images.length === 0) return;
@@ -53,7 +55,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
     images.forEach((image, index) => {
       loadImage(image, index);
     });
-  }, [images]);
+  }, [aspectRatios, images]);
 
   const handleImageLoad = (index: number) => {
     setIsLoading(prev => {
@@ -86,7 +88,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
   }, [images.length]);
 
   useEffect(() => {
-    if (autoplayInterval <= 0 || images.length <= 1) return;
+    if (autoplayInterval <= 0 || images.length <= 1 || isPaused) return;
     
     // Reset progress bar animation on image change
     setProgress(0);
@@ -120,7 +122,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
         window.clearInterval(progressInterval.current);
       }
     };
-  }, [currentIndex, nextSlide, autoplayInterval, images.length]);
+  }, [currentIndex, nextSlide, autoplayInterval, images.length, isPaused]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -134,6 +136,20 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [nextSlide, prevSlide]);
+
+  const handleImageInteractionStart = () => {
+    setIsOverlayVisible(false);
+    setIsPaused(true);
+  };
+
+  const handleImageInteractionEnd = () => {
+    setIsOverlayVisible(true);
+    setIsPaused(false);
+  };
+
+  const preventContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+  };
 
   if (!images || images.length === 0) {
     return (
@@ -150,7 +166,10 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
   return (
     <div className={cn("relative w-full rounded-xl overflow-hidden group max-w-3xl mx-auto", className)}>
       {/* Progress bar at the top */}
-      <div className="absolute top-0 left-0 right-0 z-40 px-0">
+      <div className={cn(
+        "absolute top-0 left-0 right-0 z-40 px-0 transition-opacity duration-300",
+        isOverlayVisible ? "opacity-100" : "opacity-0"
+      )}>
         <Progress value={progress} className="h-1 rounded-none bg-gray-200/20" indicatorClassName="bg-white" />
       </div>
       
@@ -168,38 +187,66 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
                   index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
                 )}
               >
-                {isLoading[index] && (
-                  <div className="absolute inset-0 z-10">
-                    <Skeleton className="w-full h-full" />
-                  </div>
-                )}
-                
-                <img
-                  src={image.url}
-                  alt={image.caption || 'Imagem do portfólio'}
-                  className="w-full h-full object-contain"
-                  onLoad={() => handleImageLoad(index)}
-                  onError={() => handleImageError(index)}
+                {/* Base Image Layer */}
+                <div className="absolute inset-0">
+                  <img
+                    src={image.url}
+                    alt={image.caption || 'Imagem do portfólio'}
+                    className="w-full h-full object-contain select-none"
+                    draggable={false}
+                    onLoad={() => handleImageLoad(index)}
+                    onError={() => handleImageError(index)}
+                    style={{ WebkitTouchCallout: 'none' }}
+                    onContextMenu={(e) => e.preventDefault()}
+                  />
+                </div>
+
+                {/* Interaction Layer - Ajustado para melhor controle de eventos touch */}
+                <div 
+                  className="absolute inset-0 z-40 select-none touch-none"
+                  onContextMenu={preventContextMenu}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    preventContextMenu(e);
+                    handleImageInteractionStart();
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    handleImageInteractionEnd();
+                  }}
+                  onMouseDown={handleImageInteractionStart}
+                  onMouseUp={handleImageInteractionEnd}
+                  onMouseLeave={handleImageInteractionEnd}
                 />
-                
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-20" />
-                
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[92%] p-4 md:p-6 z-30">
-                  <div className="bg-black/30 p-4 rounded-lg backdrop-blur-sm">
-                    <h3 className="text-lg md:text-xl font-bold uppercase tracking-wide text-white mb-2">
-                      {displayTitle}
-                    </h3>
-                    <div className="w-12 h-0.5 bg-white/50 mb-2"/>
-                    <p className="text-sm md:text-base text-white/90 line-clamp-3">
-                      {image.caption}
-                    </p>
-                    <p className="text-xs text-white/70 mt-2">
-                      {new Date(image.createdAt).toLocaleDateString('pt-BR', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </p>
+
+                {/* Overlay Container */}
+                <div 
+                  className={cn(
+                    "absolute inset-0 z-30 transition-all duration-300",
+                    isOverlayVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                  )}
+                >
+                  {/* Gradient Background */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                  
+                  {/* Text Content */}
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full p-4 md:p-6">
+                    <div className="bg-black/30 p-4 rounded-lg backdrop-blur-sm max-w-3xl mx-auto">
+                      <h3 className="text-lg md:text-xl font-bold uppercase tracking-wide text-white mb-2">
+                        {displayTitle}
+                      </h3>
+                      <div className="w-12 h-0.5 bg-white/50 mb-2"/>
+                      <p className="text-sm md:text-base text-white/90 line-clamp-3">
+                        {image.caption}
+                      </p>
+                      <p className="text-xs text-white/70 mt-2">
+                        {new Date(image.createdAt).toLocaleDateString('pt-BR', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -211,24 +258,33 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
       <Button
         variant="ghost"
         size="icon"
-        className="absolute left-4 top-[20%] -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-full h-14 w-14 md:h-16 md:w-16 opacity-70 hover:opacity-100 transition-opacity"
+        className={cn(
+          "absolute left-0 md:left-4 top-[25%] -translate-y-1/2 z-40 bg-black/30 hover:bg-black/50 text-white rounded-[30px] h-32 w-8 md:h-24 md:w-12 transition-opacity",
+          isOverlayVisible ? "opacity-70 hover:opacity-100" : "opacity-0 pointer-events-none"
+        )}
         onClick={prevSlide}
         aria-label="Previous slide"
       >
-        <ChevronLeft className="h-8 w-8 md:h-10 md:w-10" />
+        <ChevronLeft className="h-6 w-6 md:h-6 md:w-6" />
       </Button>
       
       <Button
         variant="ghost"
         size="icon"
-        className="absolute right-4 top-[20%] -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-full h-14 w-14 md:h-16 md:w-16 opacity-70 hover:opacity-100 transition-opacity"
+        className={cn(
+          "absolute right-0 md:right-4 top-[25%] -translate-y-1/2 z-30 bg-black/30 hover:bg-black/50 text-white rounded-[30px] h-32 w-8 md:h-24 md:w-12 transition-all",
+          isOverlayVisible ? "opacity-70 hover:opacity-100" : "opacity-0 pointer-events-none"
+        )}
         onClick={nextSlide}
         aria-label="Next slide"
       >
-        <ChevronRight className="h-8 w-8 md:h-10 md:w-10" />
+        <ChevronRight className="h-6 w-6 md:h-6 md:w-6" />
       </Button>
       
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-1.5 pb-1 z-30">
+      <div className={cn(
+        "absolute bottom-0 left-0 right-0 flex justify-center gap-1.5 pb-1 z-30 transition-opacity duration-300",
+        isOverlayVisible ? "opacity-100" : "opacity-0"
+      )}>
         {images.map((_, index) => (
           <button
             key={index}

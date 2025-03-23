@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   getPortfolio, 
@@ -59,7 +58,7 @@ const Portfolio = () => {
     }
   }, [isMobile]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!id) return;
     
     setLoading(true);
@@ -106,11 +105,11 @@ const Portfolio = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user, navigate, toast]);
 
   useEffect(() => {
     fetchData();
-  }, [id, user]);
+  }, [id, user, fetchData]);
 
   const handleAddImage = () => {
     if (!user) {

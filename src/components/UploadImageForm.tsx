@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -139,33 +138,35 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
             )}
           </div>
           
-          <div className="relative overflow-hidden rounded-md border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900 max-w-3xl mx-auto">
-            <AspectRatio ratio={aspectRatio} className="max-h-[40vh]">
-              <img 
-                src={preview} 
-                alt="Preview" 
-                className="h-full w-full object-contain"
-              />
-              
-              {/* Caption preview overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-              {(caption || imageName) && (
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <div className="bg-black/30 p-3 rounded-lg backdrop-blur-sm">
-                    {imageName && (
-                      <p className="text-white text-sm font-medium uppercase mb-1">
-                        {imageName}
-                      </p>
-                    )}
-                    {caption && (
-                      <p className="text-white/90 text-sm">
-                        {caption}
-                      </p>
-                    )}
+          <div className="relative overflow-hidden rounded-md border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
+            <div className="max-w-sm mx-auto"> {/* Limita a largura do container */}
+              <AspectRatio ratio={4/5}> {/* Força proporção do Instagram */}
+                <img 
+                  src={preview} 
+                  alt="Preview" 
+                  className="h-full w-full object-cover" /* Muda para object-cover */
+                />
+                
+                {/* Caption preview overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                {(caption || imageName) && (
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <div className="bg-black/30 p-3 rounded-lg backdrop-blur-sm">
+                      {imageName && (
+                        <p className="text-white text-sm font-medium uppercase mb-1">
+                          {imageName}
+                        </p>
+                      )}
+                      {caption && (
+                        <p className="text-white/90 text-sm">
+                          {caption}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </AspectRatio>
+                )}
+              </AspectRatio>
+            </div>
           </div>
           
           <p className="text-xs text-muted-foreground mt-2">

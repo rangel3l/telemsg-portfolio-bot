@@ -63,17 +63,17 @@ const Header: React.FC = () => {
       <div className="glass-morphism py-3 px-4 md:px-6 lg:px-8 border-b border-gray-200 dark:border-gray-800 shadow-sm animate-fade-in">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div 
-            className="flex items-center cursor-pointer"
+            className="flex items-center cursor-pointer gap-4"
             onClick={() => navigate('/')}
           >
-            <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mr-3">
+            <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center">
               <img 
                 src="/lovable-uploads/b1abe2cd-41f0-43e5-a9e2-ea123b70684b.png" 
                 alt="ImageFolio Logo" 
-                className="w-10 h-10 object-contain"
+                className="w-14 h-14 object-contain hover:scale-110 transition-transform"
               />
             </div>
-            <h1 className="text-xl font-medium text-gray-900 dark:text-white tracking-tight">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
               ImageFolio
             </h1>
           </div>
