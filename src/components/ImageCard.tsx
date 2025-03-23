@@ -41,6 +41,9 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
     img.src = image.url;
   }, [image.url]);
   
+  // Determine o título a ser exibido
+  const displayTitle = image.imageName || (image.caption && image.caption.split('.')[0]) || 'Sem título';
+  
   return (
     <div 
       className={cn(
@@ -100,7 +103,7 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, className }) => {
           <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
             <div className="bg-black/30 backdrop-blur-sm rounded-lg p-3">
               <h3 className="text-sm font-bold uppercase mb-1">
-                {image.imageName || image.caption.split('.')[0] || 'Sem título'}
+                {displayTitle}
               </h3>
               <p className="text-white/80 text-xs mb-1">{formattedDate}</p>
               <p className="text-white text-sm font-medium">

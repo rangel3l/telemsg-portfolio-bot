@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,7 +93,7 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
     setUploading(true);
     
     try {
-      await addImageToPortfolio(portfolioId, file, caption || imageName);
+      await addImageToPortfolio(portfolioId, file, caption, imageName);
       toast({
         title: "Sucesso",
         description: "Imagem adicionada ao portfolio",
@@ -149,7 +150,7 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
               {/* Caption preview overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               {(caption || imageName) && (
-                <div className="absolute bottom-0 left-0 right-0 p-3 text-white bg-black/60 backdrop-blur-sm">
+                <div className="absolute bottom-0 left-0 right-0 p-3 text-white bg-black/30 backdrop-blur-sm">
                   {imageName && (
                     <p className="text-white text-sm font-medium uppercase mb-1">
                       {imageName}

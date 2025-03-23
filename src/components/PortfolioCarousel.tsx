@@ -51,7 +51,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
     images.forEach((image, index) => {
       loadImage(image, index);
     });
-  }, [aspectRatios, images]); // Remove aspectRatios from dependencies as it's handled within the effect
+  }, [images]); // Remove aspectRatios from dependencies as it's handled within the effect
 
   const handleImageLoad = (index: number) => {
     setIsLoading(prev => {
@@ -118,50 +118,55 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
     <div className={cn("relative w-full rounded-xl overflow-hidden group max-w-3xl mx-auto", className)}>
       <AspectRatio ratio={aspectRatios[currentIndex]} className="max-h-[80vh]">
         <div className="relative w-full h-full">
-          {images.map((image, index) => (
-            <div
-              key={image.id}
-              className={cn(
-                "absolute inset-0 w-full h-full transition-opacity duration-500",
-                index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-              )}
-            >
-              {isLoading[index] && (
-                <div className="absolute inset-0 z-10">
-                  <Skeleton className="w-full h-full" />
-                </div>
-              )}
-              
-              <img
-                src={image.url}
-                alt={image.caption || 'Imagem do portfólio'}
-                className="w-full h-full object-contain"
-                onLoad={() => handleImageLoad(index)}
-                onError={() => handleImageError(index)}
-              />
-              
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-20" />
-              
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[92%] p-4 md:p-6 z-30">
-                <div className="bg-black/30 p-4 rounded-lg backdrop-blur-sm">
-                  <h3 className="text-lg md:text-xl font-bold uppercase tracking-wide text-white mb-2">
-                    {image.imageName || image.caption.split('.')[0] || 'Sem título'}
-                  </h3>
-                  <div className="w-12 h-0.5 bg-white/50 mb-2"/>
-                  <p className="text-sm md:text-base text-white/90 line-clamp-3">
-                    {image.caption}
-                  </p>
-                  <p className="text-xs text-white/70 mt-2">
-                    {new Date(image.createdAt).toLocaleDateString('pt-BR', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </p>
+          {images.map((image, index) => {
+            // Determine o título a ser exibido
+            const displayTitle = image.imageName || (image.caption && image.caption.split('.')[0]) || 'Sem título';
+            
+            return (
+              <div
+                key={image.id}
+                className={cn(
+                  "absolute inset-0 w-full h-full transition-opacity duration-500",
+                  index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+                )}
+              >
+                {isLoading[index] && (
+                  <div className="absolute inset-0 z-10">
+                    <Skeleton className="w-full h-full" />
+                  </div>
+                )}
+                
+                <img
+                  src={image.url}
+                  alt={image.caption || 'Imagem do portfólio'}
+                  className="w-full h-full object-contain"
+                  onLoad={() => handleImageLoad(index)}
+                  onError={() => handleImageError(index)}
+                />
+                
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-20" />
+                
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[92%] p-4 md:p-6 z-30">
+                  <div className="bg-black/30 p-4 rounded-lg backdrop-blur-sm">
+                    <h3 className="text-lg md:text-xl font-bold uppercase tracking-wide text-white mb-2">
+                      {displayTitle}
+                    </h3>
+                    <div className="w-12 h-0.5 bg-white/50 mb-2"/>
+                    <p className="text-sm md:text-base text-white/90 line-clamp-3">
+                      {image.caption}
+                    </p>
+                    <p className="text-xs text-white/70 mt-2">
+                      {new Date(image.createdAt).toLocaleDateString('pt-BR', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </AspectRatio>
 

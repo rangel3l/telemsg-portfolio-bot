@@ -14,6 +14,7 @@ export type Database = {
           caption: string | null
           created_at: string
           id: string
+          image_name: string | null
           portfolio_id: string
           url: string
         }
@@ -21,6 +22,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           id?: string
+          image_name?: string | null
           portfolio_id: string
           url: string
         }
@@ -28,6 +30,7 @@ export type Database = {
           caption?: string | null
           created_at?: string
           id?: string
+          image_name?: string | null
           portfolio_id?: string
           url?: string
         }
