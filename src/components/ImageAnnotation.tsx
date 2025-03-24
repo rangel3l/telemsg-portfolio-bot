@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { MoreHorizontal, Move, Type, Circle, Trash2 } from 'lucide-react';
 import {
@@ -9,8 +8,18 @@ import {
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Annotation } from '@/types';
-import { useToast } from '@/hooks/use-toast';
+
+interface Annotation {
+  id: string;
+  x: number;
+  y: number;
+  text: string;
+  color: string;
+  fontSize: string;
+  fontFamily: string;
+  arrowAngle: number;
+  arrowLength: number; // Added property for arrow length
+}
 
 interface ImageAnnotationProps {
   imageUrl: string;
@@ -43,12 +52,6 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations);
   const [selectedAnnotation, setSelectedAnnotation] = useState<Annotation | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    // Update annotations when initialAnnotations change
-    setAnnotations(initialAnnotations);
-  }, [initialAnnotations]);
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
@@ -71,13 +74,6 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
 
     setAnnotations([...annotations, newAnnotation]);
     setSelectedAnnotation(newAnnotation);
-  };
-
-  const handleSave = () => {
-    onSave(annotations);
-    toast({
-      description: "Anotações salvas com sucesso!",
-    });
   };
 
   return (
@@ -113,7 +109,7 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
         variant="secondary"
         size="sm"
         className="absolute top-4 right-4 z-50"
-        onClick={handleSave}
+        onClick={() => onSave(annotations)}
       >
         Salvar Anotações
       </Button>

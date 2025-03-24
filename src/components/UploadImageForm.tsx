@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +8,7 @@ import { addImageToPortfolio } from '@/services/supabaseService';
 import { AspectRatio } from './ui/aspect-ratio';
 import { useCookies } from '@/hooks/use-cookies';
 import { ImageAnnotation } from './ImageAnnotation';
-import { Annotation } from '@/types';
+import { Annotation } from '@/types'; // Add this import
 
 interface UploadImageFormProps {
   portfolioId: string;
@@ -35,8 +34,7 @@ interface StoredFormData {
   imageWidth: number;
   imageHeight: number;
   aspectRatio: number;
-  annotations?: Annotation[];
-  fileData?: string;
+  fileData?: string; // Add fileData to store the file
   fileName?: string;
   fileType?: string;
   lastModified?: number;
@@ -107,7 +105,7 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
           imageWidth: parsed.imageWidth,
           imageHeight: parsed.imageHeight,
           aspectRatio: parsed.aspectRatio,
-          annotations: parsed.annotations || [],
+          annotations: [],
         };
       }
     } catch (error) {
@@ -129,6 +127,7 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
   const [isAnnotating, setIsAnnotating] = useState(false);
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
 
   // Save form state to localStorage whenever it changes
   useEffect(() => {
@@ -147,7 +146,6 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
           imageWidth: formState.imageWidth,
           imageHeight: formState.imageHeight,
           aspectRatio: formState.aspectRatio,
-          annotations: formState.annotations,
           ...fileData,
           lastModified: Date.now(),
         }));
@@ -193,11 +191,6 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
     setFormState(prev => ({ ...prev, caption: e.target.value }));
   };
 
-  const handleAnnotationSave = (newAnnotations: Annotation[]) => {
-    setFormState(prev => ({ ...prev, annotations: newAnnotations }));
-    setIsAnnotating(false);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -224,7 +217,7 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
         formState.file!, 
         formState.caption, 
         formState.imageName,
-        formState.annotations
+        annotations // Adicionar anotações aqui
       );
 
       // Clear both cookies and localStorage
@@ -261,99 +254,6 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
 
   const isSubmitDisabled = !formState.file && !formState.preview;
 
-  const renderAnnotatedImage = () => {
-    if (!formState.preview) return null;
-    
-    return (
-      <div className="relative w-full h-full">
-        <img 
-          src={formState.preview} 
-          alt="Preview" 
-          className="h-full w-full object-contain"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-        
-        {/* Render annotations */}
-        {formState.annotations.map((annotation) => (
-          <div
-            key={annotation.id}
-            className="absolute pointer-events-none"
-            style={{
-              left: `${annotation.x}%`,
-              top: `${annotation.y}%`,
-            }}
-          >
-            {/* Text Box */}
-            <div className="absolute right-full mb-2 p-2 rounded backdrop-blur-sm translate-y-[-50%] mr-2">
-              <div
-                className="text-white min-w-[120px]"
-                style={{
-                  fontFamily: annotation.fontFamily,
-                  fontSize: annotation.fontSize,
-                  color: annotation.color,
-                }}
-              >
-                {annotation.text}
-              </div>
-            </div>
-
-            {/* Arrow */}
-            <div
-              style={{
-                transform: `rotate(${annotation.arrowAngle}deg)`,
-              }}
-            >
-              <div
-                className="absolute h-[2px] origin-left"
-                style={{
-                  backgroundColor: annotation.color,
-                  width: `${annotation.arrowLength}px`,
-                }}
-              >
-                <div
-                  className="absolute right-0 transform translate-x-[1px]"
-                  style={{ color: annotation.color }}
-                >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    style={{
-                      transform: 'rotate(-90deg) translate(50%, 0)',
-                    }}
-                  >
-                    <path
-                      d="M6 0L12 12H0L6 0Z"
-                      fill={annotation.color}
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-        
-        {(formState.caption || formState.imageName) && (
-          <div className="absolute bottom-0 left-0 right-0 p-3">
-            <div className="bg-black/30 p-3 rounded-lg backdrop-blur-sm">
-              {formState.imageName && (
-                <p className="text-white text-sm font-medium uppercase mb-1">
-                  {formState.imageName}
-                </p>
-              )}
-              {formState.caption && (
-                <p className="text-white/90 text-sm">
-                  {formState.caption}
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -377,31 +277,60 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
                   {formState.imageWidth}×{formState.imageHeight}px • {getRatioName(formState.aspectRatio)}
                 </span>
               )}
-              <Button
-                type="button"
-                variant={isAnnotating ? "default" : "secondary"}
-                size="sm"
-                onClick={handleAnnotationClick}
-                className="z-50"
-              >
-                {isAnnotating ? "Voltar" : "Adicionar Anotações"}
-              </Button>
+              {!isAnnotating && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleAnnotationClick}
+                  className="z-50"
+                >
+                  Adicionar Anotações
+                </Button>
+              )}
             </div>
           </div>
           
           <div className="relative overflow-hidden rounded-md border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
             <div className="max-w-sm mx-auto">
+              {/* Modificado para usar o aspect ratio da imagem */}
               <AspectRatio ratio={formState.aspectRatio}>
                 {isAnnotating ? (
                   <div className="absolute inset-0 z-40">
                     <ImageAnnotation
                       imageUrl={formState.preview}
-                      initialAnnotations={formState.annotations}
-                      onSave={handleAnnotationSave}
+                      initialAnnotations={annotations}
+                      onSave={(newAnnotations) => {
+                        setAnnotations(newAnnotations);
+                        setIsAnnotating(false);
+                      }}
                     />
                   </div>
                 ) : (
-                  renderAnnotatedImage()
+                  <div className="relative w-full h-full">
+                    <img 
+                      src={formState.preview} 
+                      alt="Preview" 
+                      className="h-full w-full object-contain"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    {(formState.caption || formState.imageName) && (
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <div className="bg-black/30 p-3 rounded-lg backdrop-blur-sm">
+                          {formState.imageName && (
+                            <p className="text-white text-sm font-medium uppercase mb-1">
+                              {formState.imageName}
+                            </p>
+                          )}
+                          {formState.caption && (
+                            <p className="text-white/90 text-sm">
+                              {formState.caption}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </AspectRatio>
             </div>
