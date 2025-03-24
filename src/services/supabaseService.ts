@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Portfolio, ImageItem } from "@/types";
+import { Portfolio, ImageItem, Annotation } from "@/types";
 
 interface DatabaseImage {
   id: string;
@@ -192,7 +191,8 @@ export const addImageToPortfolio = async (
   portfolioId: string, 
   file: File, 
   caption: string,
-  imageName?: string
+  imageName?: string,
+  annotations?: Annotation[]
 ): Promise<ImageItem> => {
   // Verificar se o usuário tem permissão para adicionar ao portfolio
   const { data: { user } } = await supabase.auth.getUser();
@@ -241,7 +241,7 @@ export const addImageToPortfolio = async (
     .from('portfolio_images')
     .getPublicUrl(filename);
 
-  // Save image reference in database
+  // Save image reference in database with annotations
   const { data, error } = await supabase
     .from('images')
     .insert([
@@ -249,7 +249,8 @@ export const addImageToPortfolio = async (
         portfolio_id: portfolioId,
         url: publicUrl,
         caption: caption,
-        image_name: imageName, // Certifique-se de que esta propriedade esteja presente
+        image_name: imageName,
+        annotations: annotations || [] // Salvar anotações como JSON
       }
     ])
     .select()
@@ -265,8 +266,9 @@ export const addImageToPortfolio = async (
     portfolioId: data.portfolio_id,
     url: data.url,
     caption: data.caption || '',
-    imageName: data.image_name || '', // Use o operador || para fornecer um valor padrão caso seja null
-    createdAt: data.created_at
+    imageName: data.image_name || '',
+    createdAt: data.created_at,
+    annotations: data.annotations || []
   };
 };
 

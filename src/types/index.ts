@@ -6,6 +6,18 @@ export interface Portfolio {
   coverImage?: string;
 }
 
+export interface Annotation {
+  id: string;
+  x: number;
+  y: number;
+  text: string;
+  color: string;
+  fontSize: string;
+  fontFamily: string;
+  arrowAngle: number;
+  arrowLength: number;
+}
+
 export interface ImageItem {
   id: string;
   portfolioId: string;
@@ -13,6 +25,7 @@ export interface ImageItem {
   caption: string;
   createdAt: string;
   imageName?: string;
+  annotations?: Annotation[];
 }
 
 export type Image = ImageItem;
