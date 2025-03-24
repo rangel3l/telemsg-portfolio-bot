@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { 
@@ -52,7 +51,6 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
   
   const currentImage = images[current];
   
-  // Function to render annotations
   const renderAnnotations = (annotations: Annotation[] | undefined) => {
     if (!annotations || annotations.length === 0) return null;
     
@@ -65,7 +63,6 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
           top: `${annotation.y}%`,
         }}
       >
-        {/* Text Box */}
         <div className="absolute right-full mb-2 p-2 rounded backdrop-blur-sm translate-y-[-50%] mr-2">
           <div
             className="text-white min-w-[120px]"
@@ -79,7 +76,6 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
           </div>
         </div>
 
-        {/* Arrow */}
         <div
           style={{
             transform: `rotate(${annotation.arrowAngle}deg)`,
@@ -129,7 +125,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
                     <img
                       src={image.url}
                       alt={image.caption || 'Image'}
-                      className="object-cover w-full h-full max-h-[60vh]"
+                      className="object-cover w-full h-full"
                     />
                     {renderAnnotations(image.annotations)}
                   </AspectRatio>
