@@ -244,6 +244,21 @@ export const addImageToPortfolio = async (
     .from('portfolio_images')
     .getPublicUrl(filename);
 
+  // Create a JSON-safe version of annotations for storage
+  const jsonAnnotations = annotations ? 
+    annotations.map(ann => ({
+      id: ann.id,
+      x: ann.x,
+      y: ann.y,
+      text: ann.text,
+      color: ann.color,
+      fontSize: ann.fontSize,
+      fontFamily: ann.fontFamily,
+      arrowAngle: ann.arrowAngle,
+      arrowLength: ann.arrowLength
+    })) : 
+    [];
+
   // Save image reference in database with annotations
   const { data, error } = await supabase
     .from('images')
@@ -253,7 +268,7 @@ export const addImageToPortfolio = async (
         url: publicUrl,
         caption: caption,
         image_name: imageName,
-        annotations: annotations as Json // Convert to Json type for Supabase
+        annotations: jsonAnnotations as unknown as Json // Safe conversion to Json type
       }
     ])
     .select()
@@ -284,16 +299,17 @@ function convertJsonToAnnotations(json: Json | null | undefined): Annotation[] {
       return json.map(item => {
         // Ensure each item has the required Annotation properties
         if (typeof item === 'object' && item !== null) {
+          const typedItem = item as Record<string, unknown>;
           return {
-            id: String(item.id || ''),
-            x: Number(item.x || 0),
-            y: Number(item.y || 0),
-            text: String(item.text || ''),
-            color: String(item.color || '#ffffff'),
-            fontSize: String(item.fontSize || '16px'),
-            fontFamily: String(item.fontFamily || 'sans-serif'),
-            arrowAngle: Number(item.arrowAngle || 0),
-            arrowLength: Number(item.arrowLength || 100),
+            id: String(typedItem.id || ''),
+            x: Number(typedItem.x || 0),
+            y: Number(typedItem.y || 0),
+            text: String(typedItem.text || ''),
+            color: String(typedItem.color || '#ffffff'),
+            fontSize: String(typedItem.fontSize || '16px'),
+            fontFamily: String(typedItem.fontFamily || 'sans-serif'),
+            arrowAngle: Number(typedItem.arrowAngle || 0),
+            arrowLength: Number(typedItem.arrowLength || 100),
           } as Annotation;
         }
         return null;
