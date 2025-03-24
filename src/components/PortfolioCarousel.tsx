@@ -129,7 +129,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
                     <img
                       src={image.url}
                       alt={image.caption || 'Image'}
-                      className="object-cover w-full h-full"
+                      className="object-cover w-full h-full max-h-[60vh]"
                     />
                     {renderAnnotations(image.annotations)}
                   </AspectRatio>
