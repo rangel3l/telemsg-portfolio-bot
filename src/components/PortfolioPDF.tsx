@@ -1,5 +1,7 @@
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+
+import { Document, Page, Text, View, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer';
 import { GeneratePdfProps } from '@/lib/pdfGenerator';
+import { Annotation } from '@/types';
 
 const pdfStyle = StyleSheet.create({
   page: {
@@ -39,6 +41,7 @@ const pdfStyle = StyleSheet.create({
   },
   imageContainer: {
     marginVertical: 20,
+    position: 'relative',
   },
   image: {
     width: '100%',
@@ -64,6 +67,17 @@ const pdfStyle = StyleSheet.create({
     fontSize: 10,
     color: '#999',
   },
+  annotationText: {
+    position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 5,
+    borderRadius: 3,
+    color: 'white',
+    fontSize: 10,
+  },
+  annotationArrow: {
+    position: 'absolute',
+  },
 });
 
 const getCurrentSemesterYear = () => {
@@ -72,6 +86,51 @@ const getCurrentSemesterYear = () => {
   const month = now.getMonth() + 1;
   const semester = month <= 6 ? 'primeiro' : 'segundo';
   return `para o ${semester} semestre de ${year}`;
+};
+
+// Render annotation in PDF
+const AnnotationPDF = ({ annotation, pageWidth }: { annotation: Annotation, pageWidth: number }) => {
+  // Scale the annotation positions and sizes to fit the PDF
+  const arrowLength = (annotation.arrowLength / 100) * pageWidth * 0.5;
+  const x = (annotation.x / 100) * pageWidth;
+  const y = annotation.y * 2; // Adjust Y position for PDF
+  const textX = x - 120; // Position text to the left of the arrow start
+  
+  // Calculate arrow end coordinates based on angle
+  const angleInRadians = (annotation.arrowAngle * Math.PI) / 180;
+  const arrowEndX = x + arrowLength * Math.cos(angleInRadians);
+  const arrowEndY = y + arrowLength * Math.sin(angleInRadians);
+  
+  return (
+    <>
+      {/* Annotation text */}
+      <View style={[
+        styleSheet.annotationText,
+        { 
+          left: textX, 
+          top: y - 10,
+          maxWidth: 100,
+          color: annotation.color,
+        }
+      ]}>
+        <Text>{annotation.text}</Text>
+      </View>
+      
+      {/* Arrow line */}
+      <Svg height={500} width={pageWidth} style={{ position: 'absolute', top: 0, left: 0 }}>
+        <Path
+          d={`M ${x} ${y} L ${arrowEndX} ${arrowEndY}`}
+          stroke={annotation.color}
+          strokeWidth={1}
+        />
+        {/* Arrow head */}
+        <Path
+          d={`M ${arrowEndX-5} ${arrowEndY-5} L ${arrowEndX} ${arrowEndY} L ${arrowEndX-5} ${arrowEndY+5}`}
+          fill={annotation.color}
+        />
+      </Svg>
+    </>
+  );
 };
 
 const PortfolioPDF = ({
@@ -105,6 +164,12 @@ const PortfolioPDF = ({
       <Page key={image.id} size="A4" style={pdfStyle.page}>
         <View style={pdfStyle.imageContainer}>
           <Image src={image.url} style={pdfStyle.image} />
+          
+          {/* Render annotations if they exist */}
+          {image.annotations && image.annotations.length > 0 && image.annotations.map(annotation => (
+            <AnnotationPDF key={annotation.id} annotation={annotation} pageWidth={500} />
+          ))}
+          
           <Text style={pdfStyle.imageName}>{image.imageName || ''}</Text>
           <Text style={pdfStyle.caption}>{image.caption || ''}</Text>
         </View>
