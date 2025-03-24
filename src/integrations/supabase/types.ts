@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       images: {
         Row: {
+          annotations: Json | null
           caption: string | null
           created_at: string
           id: string
@@ -19,6 +20,7 @@ export type Database = {
           url: string
         }
         Insert: {
+          annotations?: Json | null
           caption?: string | null
           created_at?: string
           id?: string
@@ -27,6 +29,7 @@ export type Database = {
           url: string
         }
         Update: {
+          annotations?: Json | null
           caption?: string | null
           created_at?: string
           id?: string

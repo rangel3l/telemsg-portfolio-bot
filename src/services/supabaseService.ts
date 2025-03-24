@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Portfolio, ImageItem, Annotation } from "@/types";
 
@@ -6,8 +7,9 @@ interface DatabaseImage {
   portfolio_id: string;
   url: string;
   caption: string;
-  image_name?: string; // Adicionado o campo como opcional
+  image_name?: string;
   created_at: string;
+  annotations?: Annotation[];
 }
 
 // Portfolio functions
@@ -183,7 +185,8 @@ export const getPortfolioImages = async (portfolioId: string): Promise<ImageItem
     url: image.url,
     caption: image.caption || '',
     imageName: image.image_name || '',
-    createdAt: image.created_at
+    createdAt: image.created_at,
+    annotations: image.annotations || []
   }));
 };
 

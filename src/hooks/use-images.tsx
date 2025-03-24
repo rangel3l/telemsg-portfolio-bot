@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ImageItem } from '@/types';
 import { getPortfolioImages } from '@/services/supabaseService';
@@ -32,10 +33,19 @@ export const useImages = (portfolioId?: string) => {
     images,
     isLoading,
     error,
-    refetch: () => {
+    refetch: async () => {
       setIsLoading(true);
       setError(null);
-      return getPortfolioImages(portfolioId!);
+      try {
+        const data = await getPortfolioImages(portfolioId!);
+        setImages(data);
+        return data;
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error('Failed to fetch images'));
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
     },
   };
 };
