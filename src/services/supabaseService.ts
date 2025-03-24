@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Portfolio, ImageItem, Annotation } from "@/types";
+import { Json } from "@/integrations/supabase/types";
 
 interface DatabaseImage {
   id: string;
@@ -9,7 +9,7 @@ interface DatabaseImage {
   caption: string;
   image_name?: string;
   created_at: string;
-  annotations?: Annotation[];
+  annotations?: Json;
 }
 
 // Portfolio functions
@@ -186,7 +186,7 @@ export const getPortfolioImages = async (portfolioId: string): Promise<ImageItem
     caption: image.caption || '',
     imageName: image.image_name || '',
     createdAt: image.created_at,
-    annotations: image.annotations || []
+    annotations: convertJsonToAnnotations(image.annotations)
   }));
 };
 
@@ -253,7 +253,7 @@ export const addImageToPortfolio = async (
         url: publicUrl,
         caption: caption,
         image_name: imageName,
-        annotations: annotations || [] // Salvar anotações como JSON
+        annotations: annotations as Json // Convert to Json type for Supabase
       }
     ])
     .select()
@@ -271,9 +271,40 @@ export const addImageToPortfolio = async (
     caption: data.caption || '',
     imageName: data.image_name || '',
     createdAt: data.created_at,
-    annotations: data.annotations || []
+    annotations: convertJsonToAnnotations(data.annotations)
   };
 };
+
+// Helper function to convert Json to Annotation[] safely
+function convertJsonToAnnotations(json: Json | null | undefined): Annotation[] {
+  if (!json) return [];
+  
+  try {
+    if (Array.isArray(json)) {
+      return json.map(item => {
+        // Ensure each item has the required Annotation properties
+        if (typeof item === 'object' && item !== null) {
+          return {
+            id: String(item.id || ''),
+            x: Number(item.x || 0),
+            y: Number(item.y || 0),
+            text: String(item.text || ''),
+            color: String(item.color || '#ffffff'),
+            fontSize: String(item.fontSize || '16px'),
+            fontFamily: String(item.fontFamily || 'sans-serif'),
+            arrowAngle: Number(item.arrowAngle || 0),
+            arrowLength: Number(item.arrowLength || 100),
+          } as Annotation;
+        }
+        return null;
+      }).filter(Boolean) as Annotation[];
+    }
+  } catch (e) {
+    console.error("Error converting JSON to annotations:", e);
+  }
+  
+  return [];
+}
 
 export const deleteImage = async (imageId: string): Promise<void> => {
   // Verificar se o usuário está autenticado
