@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { 
@@ -121,7 +122,7 @@ const PortfolioCarousel: React.FC<PortfolioCarouselProps> = ({
             <CarouselItem key={image.id}>
               <div className="p-1">
                 <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-                  <AspectRatio ratio={4/3} className="bg-muted relative">
+                  <AspectRatio ratio={4/3} className="bg-muted relative max-h-[60vh]">
                     <img
                       src={image.url}
                       alt={image.caption || 'Image'}
