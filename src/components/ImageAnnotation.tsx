@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MoreHorizontal, Move, Type, Circle, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -8,6 +8,7 @@ import {
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { renderAnnotationsToImage } from '@/lib/imageProcessor';
 
 interface Annotation {
   id: string;
@@ -23,8 +24,10 @@ interface Annotation {
 
 interface ImageAnnotationProps {
   imageUrl: string;
-  onSave: (annotations: Annotation[]) => void;
+  onSave: (newAnnotations: Annotation[], annotatedImageBlob: Blob) => void;
+  onCancel: () => void;  // Add this prop
   initialAnnotations?: Annotation[];
+  maxHeight?: string; // Nova prop para controlar altura máxima
 }
 
 const fontFamilies = [
@@ -44,10 +47,17 @@ const colors = [
   '#00ffff',
 ];
 
+const ARROW_WIDTH = 120; // Aumentado de 100 para 120
+const ARROW_LINE_HEIGHT = 3; // Aumentado de 2 para 3
+const ARROW_HEAD_SIZE = 12; // Aumentado de 8 para 12
+const TEXT_SIZE = 16; // Aumentado de 14 para 16
+
 export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
   imageUrl,
   onSave,
+  onCancel,  // Add this prop
   initialAnnotations = [],
+  maxHeight = "500px" // Valor padrão
 }) => {
   const [annotations, setAnnotations] = useState<Annotation[]>(initialAnnotations);
   const [selectedAnnotation, setSelectedAnnotation] = useState<Annotation | null>(null);
@@ -64,26 +74,40 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
       id: Date.now().toString(),
       x,
       y,
-      text: 'Nova anotação',
+      text: '', // Alterado para começar vazio
       color: '#ffffff',
-      fontSize: '16px',
+      fontSize: '16px', // Reduced from 24px
       fontFamily: 'sf-pro-display',
       arrowAngle: 45,
-      arrowLength: 100,
+      arrowLength: 50, // Base length (will be doubled in rendering)
     };
 
     setAnnotations([...annotations, newAnnotation]);
     setSelectedAnnotation(newAnnotation);
   };
 
+  const handleSave = async () => {
+    try {
+      const annotatedImageBlob = await renderAnnotationsToImage(imageUrl, annotations);
+      onSave(annotations, annotatedImageBlob);
+    } catch (error) {
+      console.error('Error saving annotations:', error);
+    }
+  };
+
   return (
     <div className="relative w-full h-full">
       <div
         ref={containerRef}
-        className="relative w-full h-full cursor-crosshair"
+        className="relative w-full h-full"
         onClick={handleImageClick}
       >
-        <img src={imageUrl} alt="Imagem com anotações" className="w-full h-auto" />
+        <img 
+          src={imageUrl} 
+          alt="Imagem com anotações" 
+          className="w-full h-full object-contain"
+          style={{ maxHeight }} // Usa a prop maxHeight
+        />
 
         {annotations.map((annotation) => (
           <AnnotationElement
@@ -105,14 +129,22 @@ export const ImageAnnotation: React.FC<ImageAnnotationProps> = ({
         ))}
       </div>
 
-      <Button
-        variant="secondary"
-        size="sm"
-        className="absolute top-4 right-4 z-50"
-        onClick={() => onSave(annotations)}
-      >
-        Salvar Anotações
-      </Button>
+      <div className="absolute top-4 right-4 z-50 flex gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onCancel}
+        >
+          Cancelar
+        </Button>
+        <Button
+          variant="default"
+          size="sm"
+          onClick={handleSave}
+        >
+          Aplicar Anotações
+        </Button>
+      </div>
     </div>
   );
 };
@@ -129,6 +161,20 @@ const AnnotationElement: React.FC<{
   const [dragType, setDragType] = useState<'move' | 'rotate' | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const elementRef = useRef<HTMLDivElement>(null);
+
+  // Memoize keepAnnotationInBounds function
+  const keepAnnotationInBounds = useCallback((x: number, y: number) => {
+    const textBoxWidth = 150;
+    const arrowWidth = ARROW_WIDTH;
+    
+    const minX = (textBoxWidth / (containerBounds?.width || 1)) * 100;
+    const maxX = 100 - ((arrowWidth / (containerBounds?.width || 1)) * 100);
+    
+    return {
+      x: Math.max(minX, Math.min(maxX, x)),
+      y: Math.max(0, Math.min(100, y))
+    };
+  }, [containerBounds]);
 
   const handleMouseDown = (e: React.MouseEvent, type: 'move' | 'rotate') => {
     e.stopPropagation();
@@ -148,10 +194,13 @@ const AnnotationElement: React.FC<{
         const newX = annotation.x + (deltaX / containerBounds.width) * 100;
         const newY = annotation.y + (deltaY / containerBounds.height) * 100;
 
+        // Apply bounds checking
+        const bounded = keepAnnotationInBounds(newX, newY);
+        
         onChange({
           ...annotation,
-          x: Math.max(0, Math.min(100, newX)),
-          y: Math.max(0, Math.min(100, newY)),
+          x: bounded.x,
+          y: bounded.y,
         });
 
         setStartPos({ x: e.clientX, y: e.clientY });
@@ -190,7 +239,7 @@ const AnnotationElement: React.FC<{
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragType, startPos, annotation, onChange, containerBounds]);
+  }, [isDragging, dragType, startPos, annotation, onChange, containerBounds, keepAnnotationInBounds]);
 
   return (
     <div
@@ -199,6 +248,7 @@ const AnnotationElement: React.FC<{
       style={{
         left: `${annotation.x}%`,
         top: `${annotation.y}%`,
+        transform: 'translate(-0%, -0%)', // Remove any translation that might offset the position
       }}
       onMouseDown={(e) => handleMouseDown(e, 'move')}
       onClick={(e) => {
@@ -207,11 +257,18 @@ const AnnotationElement: React.FC<{
       }}
     >
       {/* Text Box */}
-      <div className="absolute right-full mb-2 p-2 rounded backdrop-blur-sm translate-y-[-50%] mr-2">
+      <div className="absolute right-full mb-0 p-2 rounded backdrop-blur-sm translate-y-[-50%] mr-2">
         <Input
           value={annotation.text}
           onChange={(e) => onChange({ ...annotation, text: e.target.value })}
-          className="bg-black/50 border-none text-white min-w-[120px]"
+          className="bg-black/90 border-none text-white min-w-[150px]" // Removido font-semibold
+          style={{ 
+            fontSize: `${TEXT_SIZE}px`,
+            padding: '8px 12px', // Padding maior
+            height: '36px' // Altura maior
+          }}
+          placeholder="Digite a anotação..."
+          autoFocus
         />
       </div>
 
@@ -220,34 +277,35 @@ const AnnotationElement: React.FC<{
         className="relative"
         style={{
           transform: `rotate(${annotation.arrowAngle}deg)`,
+          transformOrigin: '0 0', // Make sure rotation happens from the start point
         }}
       >
         {/* Arrow line */}
         <div
-          className="absolute h-[2px] origin-left transform transition-all"
+          className="absolute origin-left transform transition-all"
           style={{
             backgroundColor: annotation.color,
-            transform: `rotate(${annotation.arrowAngle}deg)`,
-            width: '100px', // Fixed width for arrow line
+            width: `${ARROW_WIDTH}px`,
+            height: `${ARROW_LINE_HEIGHT}px`
           }}
         >
           {/* Arrow head */}
           <div
-            className="absolute right-0 transform translate-x-[1px]"
+            className="absolute right-0 transform"
             style={{ color: annotation.color }}
           >
             <svg
-              width="12"
-              height="12"
-              viewBox="0 0 12 12"
+              width={ARROW_HEAD_SIZE}
+              height={ARROW_HEAD_SIZE}
+              viewBox={`0 0 ${ARROW_HEAD_SIZE} ${ARROW_HEAD_SIZE}`}
               fill="none"
               style={{
                 transform: 'rotate(-90deg) translate(50%, 0)',
               }}
             >
               <path
-                d="M6 0L12 12H0L6 0Z"
-                fill={annotation.color}
+                d={`M${ARROW_HEAD_SIZE/2} 0L${ARROW_HEAD_SIZE} ${ARROW_HEAD_SIZE}H0L${ARROW_HEAD_SIZE/2} 0Z`}
+                fill="currentColor"
               />
             </svg>
           </div>

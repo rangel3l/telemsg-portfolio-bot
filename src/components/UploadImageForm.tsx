@@ -25,6 +25,7 @@ interface FormState {
   imageHeight: number;
   aspectRatio: number;
   annotations: Annotation[];
+  annotatedImage: Blob | null;
 }
 
 interface StoredFormData {
@@ -106,6 +107,7 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
           imageHeight: parsed.imageHeight,
           aspectRatio: parsed.aspectRatio,
           annotations: [],
+          annotatedImage: null,
         };
       }
     } catch (error) {
@@ -121,6 +123,7 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
       imageHeight: 0,
       aspectRatio: 1,
       annotations: [],
+      annotatedImage: null,
     };
   });
 
@@ -202,6 +205,14 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
       return;
     }
 
+    if (!formState.imageName) {
+      toast({
+        description: "Por favor, adicione um título para a imagem",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setUploading(true);
     try {
       if (!formState.file && formState.preview) {
@@ -233,6 +244,7 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
         imageHeight: 0,
         aspectRatio: 1,
         annotations: [],
+        annotatedImage: null,
       });
       onSuccess();
     } catch (error) {
@@ -252,10 +264,27 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
     setIsAnnotating(!isAnnotating);
   };
 
+  const handleAnnotationsSave = (newAnnotations: Annotation[], annotatedImageBlob: Blob) => {
+    const previewUrl = URL.createObjectURL(annotatedImageBlob);
+    
+    setAnnotations(newAnnotations);
+    setFormState(prev => ({
+      ...prev,
+      file: new File([annotatedImageBlob], 'annotated_image.png', { type: 'image/png' }),
+      preview: previewUrl,
+      annotations: newAnnotations,
+    }));
+    setIsAnnotating(false);
+  };
+
+  const handleAnnotationCancel = () => {
+    setIsAnnotating(false);
+  };
+
   const isSubmitDisabled = !formState.file && !formState.preview;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" role="form">
       <div className="space-y-2">
         <Label htmlFor="file">Selecionar Imagem</Label>
         <Input
@@ -292,18 +321,16 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
           </div>
           
           <div className="relative overflow-hidden rounded-md border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
-            <div className="max-w-sm mx-auto">
-              {/* Modificado para usar o aspect ratio da imagem */}
+            <div className="max-w-xl mx-auto"> {/* Modificado para tamanho fixo */}
               <AspectRatio ratio={formState.aspectRatio}>
                 {isAnnotating ? (
                   <div className="absolute inset-0 z-40">
                     <ImageAnnotation
                       imageUrl={formState.preview}
                       initialAnnotations={annotations}
-                      onSave={(newAnnotations) => {
-                        setAnnotations(newAnnotations);
-                        setIsAnnotating(false);
-                      }}
+                      onSave={handleAnnotationsSave}
+                      onCancel={handleAnnotationCancel}
+                      maxHeight="500px" 
                     />
                   </div>
                 ) : (
@@ -312,7 +339,19 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
                       src={formState.preview} 
                       alt="Preview" 
                       className="h-full w-full object-contain"
+                      style={{ maxHeight: "500px" }} 
                     />
+                    {!isAnnotating && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setIsAnnotating(true)}
+                        className="absolute top-4 right-4 z-50"
+                      >
+                        Adicionar Anotações
+                      </Button>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                     {(formState.caption || formState.imageName) && (
                       <div className="absolute bottom-0 left-0 right-0 p-3">
@@ -343,7 +382,7 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
       )}
       
       <div className="space-y-2">
-        <Label htmlFor="imageName">Nome da Imagem (Título)</Label>
+        <Label htmlFor="imageName" className="font-medium">Nome da Imagem (Título) *</Label>
         <Input
           id="imageName"
           value={formState.imageName}
@@ -351,6 +390,7 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
           placeholder="Digite um título para esta imagem"
           disabled={uploading}
           className="uppercase"
+          required
         />
       </div>
       
@@ -365,18 +405,18 @@ const UploadImageForm: React.FC<UploadImageFormProps> = ({
         />
       </div>
       
-      <div className="flex space-x-2">
+      <div className="flex space-x-2 pt-4">
         <Button 
           type="submit" 
-          disabled={uploading || isSubmitDisabled}
+          disabled={uploading || isSubmitDisabled || isAnnotating}
         >
-          {uploading ? 'Enviando...' : 'Adicionar Imagem'}
+          {uploading ? 'Enviando...' : 'Salvar Imagem'}
         </Button>
         <Button 
           type="button" 
           variant="outline" 
           onClick={onCancel} 
-          disabled={uploading}
+          disabled={uploading || isAnnotating}
         >
           Cancelar
         </Button>
